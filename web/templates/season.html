@@ -43,7 +43,7 @@
                                         
                                         <div class="mb-4">
                                             <label class="block text-gray-700 mb-1">Winner</label>
-                                            <select name="winner_id" required class="w-full p-2 border rounded">
+                                            <select name="winner_id" class="w-full p-2 border rounded">
                                                 <option value="">Select Winner</option>
                                                 {{range $.AllPlayers}}
                                                     <option value="{{.ID}}">{{.Name}}</option>
@@ -53,7 +53,7 @@
                                         
                                         <div class="mb-6">
                                             <label class="block text-gray-700 mb-1">Second Place</label>
-                                            <select name="second_place_id" required class="w-full p-2 border rounded">
+                                            <select name="second_place_id" class="w-full p-2 border rounded">
                                                 <option value="">Select Second Place</option>
                                                 {{range $.AllPlayers}}
                                                     <option value="{{.ID}}">{{.Name}}</option>

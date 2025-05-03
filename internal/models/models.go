@@ -24,8 +24,8 @@ type Game struct {
 	ID            int       `json:"id"`
 	SeasonID      int       `json:"season_id"`
 	HostID        int       `json:"host_id"`
-	WinnerID      int       `json:"winner_id"`
-	SecondPlaceID int       `json:"second_place_id"`
+	WinnerID      *int      `json:"winner_id"`
+	SecondPlaceID *int      `json:"second_place_id"`
 	GameDate      time.Time `json:"game_date"`
 	CreatedAt     time.Time `json:"created_at"`
 	
@@ -120,7 +120,7 @@ func (r *Repository) GetSeasonPlayers(seasonID int) ([]PlayerStatus, error) {
 }
 
 // AddGame adds a new game to the database
-func (r *Repository) AddGame(seasonID, hostID, winnerID, secondPlaceID int, gameDate time.Time) error {
+func (r *Repository) AddGame(seasonID, hostID int, winnerID, secondPlaceID *int, gameDate time.Time) error {
 	query := `
 		INSERT INTO games (season_id, host_id, winner_id, second_place_id, game_date) 
 		VALUES (?, ?, ?, ?, ?)
@@ -141,15 +141,15 @@ func (r *Repository) GetGames(seasonID int) ([]Game, error) {
 			g.game_date, 
 			g.created_at,
 			host.name as host_name,
-			winner.name as winner_name,
-			second.name as second_place_name
+			COALESCE(winner.name, '') as winner_name,
+			COALESCE(second.name, '') as second_place_name
 		FROM 
 			games g
 		JOIN 
 			players host ON g.host_id = host.id
-		JOIN 
+		LEFT JOIN 
 			players winner ON g.winner_id = winner.id
-		JOIN 
+		LEFT JOIN 
 			players second ON g.second_place_id = second.id
 		WHERE 
 			g.season_id = ?

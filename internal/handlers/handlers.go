@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"database/sql"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -277,18 +278,30 @@ func (h *Handler) AddGameHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	winnerID, err := strconv.Atoi(r.FormValue("winner_id"))
-	if err != nil {
-		h.Logger.Printf("ERROR: Invalid winner_id: %s", r.FormValue("winner_id"))
-		http.Error(w, "Invalid winner ID", http.StatusBadRequest)
-		return
+	// Handle winner_id (optional)
+	var winnerID *int
+	winnerIDStr := r.FormValue("winner_id")
+	if winnerIDStr != "" {
+		winVal, err := strconv.Atoi(winnerIDStr)
+		if err != nil {
+			h.Logger.Printf("ERROR: Invalid winner_id: %s", winnerIDStr)
+			http.Error(w, "Invalid winner ID", http.StatusBadRequest)
+			return
+		}
+		winnerID = &winVal
 	}
 
-	secondPlaceID, err := strconv.Atoi(r.FormValue("second_place_id"))
-	if err != nil {
-		h.Logger.Printf("ERROR: Invalid second_place_id: %s", r.FormValue("second_place_id"))
-		http.Error(w, "Invalid second place ID", http.StatusBadRequest)
-		return
+	// Handle second_place_id (optional)
+	var secondPlaceID *int
+	secondPlaceIDStr := r.FormValue("second_place_id")
+	if secondPlaceIDStr != "" {
+		secondVal, err := strconv.Atoi(secondPlaceIDStr)
+		if err != nil {
+			h.Logger.Printf("ERROR: Invalid second_place_id: %s", secondPlaceIDStr)
+			http.Error(w, "Invalid second place ID", http.StatusBadRequest)
+			return
+		}
+		secondPlaceID = &secondVal
 	}
 
 	gameDate, err := time.Parse("2006-01-02", r.FormValue("game_date"))
@@ -298,8 +311,22 @@ func (h *Handler) AddGameHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.Printf("PARAM: Season ID = %d, Host ID = %d, Winner ID = %d, Second Place ID = %d, Game Date = %s", 
-		seasonID, hostID, winnerID, secondPlaceID, gameDate.Format("2006-01-02"))
+	// Log parameters with pointer-safe handling
+	// Create string representations for logging
+	var winnerIDLogStr, secondPlaceIDLogStr string
+	
+	winnerIDLogStr = "null"
+	if winnerID != nil {
+		winnerIDLogStr = fmt.Sprintf("%d", *winnerID)
+	}
+	
+	secondPlaceIDLogStr = "null"
+	if secondPlaceID != nil {
+		secondPlaceIDLogStr = fmt.Sprintf("%d", *secondPlaceID)
+	}
+	
+	h.Logger.Printf("PARAM: Season ID = %d, Host ID = %d, Winner ID = %s, Second Place ID = %s, Game Date = %s", 
+		seasonID, hostID, winnerIDLogStr, secondPlaceIDLogStr, gameDate.Format("2006-01-02"))
 
 	// Add game to database
 	err = h.Repo.AddGame(seasonID, hostID, winnerID, secondPlaceID, gameDate)
