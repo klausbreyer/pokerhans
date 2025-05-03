@@ -2,104 +2,104 @@
 <div class="mb-6">
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-2xl font-bold">{{.CurrentSeason.Name}}</h2>
-        
+
         <div class="relative">
             <select id="season-select" onchange="if (this.value) window.location.href=this.value" class="bg-white border border-gray-300 p-2 rounded">
                 <option value="">Select Season</option>
                 {{range .Seasons}}
-                    <option value="/season/{{.ID}}" {{if eq .ID $.CurrentSeason.ID}}selected{{end}}>{{.Name}}</option>
+                <option value="/season/{{.ID}}" {{if eq .ID $.CurrentSeason.ID}}selected{{end}}>{{.Name}}</option>
                 {{end}}
             </select>
         </div>
     </div>
-    
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Players to visit section - Only shown for the latest season -->
         <div class="bg-white p-4 rounded shadow">
             {{if .IsLatestSeason}}
-                <h3 class="text-xl font-bold mb-4 text-poker-green border-b pb-2">Players to Visit ({{len .ToVisitPlayers}})</h3>
-                
-                {{if .ToVisitPlayers}}
-                    <ul class="space-y-2 mb-4">
-                        {{range .ToVisitPlayers}}
-                            <li class="flex justify-between items-center p-2 hover:bg-gray-100 rounded">
-                                <span>{{.Name}}</span>
-                                <button onclick="openModal('addGameModal-{{.ID}}')" class="bg-poker-green text-white py-1 px-3 rounded text-sm hover:bg-green-700">
-                                    Add Game
-                                </button>
-                                
-                                <!-- Modal for adding game -->
-                                <div id="addGameModal-{{.ID}}" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-                                    <div class="bg-white p-6 rounded shadow-lg max-w-md w-full">
-                                        <h4 class="text-xl font-bold mb-4">Add Game at {{.Name}}'s</h4>
-                                        
-                                        <form action="/game/add" method="POST">
-                                            <input type="hidden" name="season_id" value="{{$.CurrentSeason.ID}}">
-                                            <input type="hidden" name="host_id" value="{{.ID}}">
-                                            
-                                            <div class="mb-4">
-                                                <label class="block text-gray-700 mb-1">Date</label>
-                                                <input type="date" name="game_date" value="{{$.CurrentDate}}" required class="w-full p-2 border rounded">
-                                            </div>
-                                            
-                                            <div class="mb-4">
-                                                <label class="block text-gray-700 mb-1">Winner</label>
-                                                <select name="winner_id" class="w-full p-2 border rounded">
-                                                    <option value="">Select Winner</option>
-                                                    {{range $.AllPlayers}}
-                                                        <option value="{{.ID}}">{{.Name}}</option>
-                                                    {{end}}
-                                                </select>
-                                            </div>
-                                            
-                                            <div class="mb-6">
-                                                <label class="block text-gray-700 mb-1">Second Place</label>
-                                                <select name="second_place_id" class="w-full p-2 border rounded">
-                                                    <option value="">Select Second Place</option>
-                                                    {{range $.AllPlayers}}
-                                                        <option value="{{.ID}}">{{.Name}}</option>
-                                                    {{end}}
-                                                </select>
-                                            </div>
-                                            
-                                            <div class="flex justify-end space-x-3">
-                                                <button type="button" onclick="closeModal('addGameModal-{{.ID}}')" class="py-2 px-4 border rounded">
-                                                    Cancel
-                                                </button>
-                                                <button type="submit" class="bg-poker-green text-white py-2 px-4 rounded hover:bg-green-700">
-                                                    Save Game
-                                                </button>
-                                            </div>
-                                        </form>
-                                    </div>
+            <h3 class="text-xl font-bold mb-4 text-poker-green border-b pb-2">Players to Visit ({{len .ToVisitPlayers}})</h3>
+
+            {{if .ToVisitPlayers}}
+            <ul class="space-y-2 mb-4">
+                {{range .ToVisitPlayers}}
+                <li class="flex justify-between items-center p-2 hover:bg-gray-100 rounded">
+                    <span>{{.Name}}</span>
+                    <button onclick="openModal('addGameModal-{{.ID}}')" class="bg-poker-green text-white py-1 px-3 rounded text-sm hover:bg-green-700">
+                        Add Game
+                    </button>
+
+                    <!-- Modal for adding game -->
+                    <div id="addGameModal-{{.ID}}" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+                        <div class="bg-white p-6 rounded shadow-lg max-w-md w-full">
+                            <h4 class="text-xl font-bold mb-4">Add Game at {{.Name}}'s</h4>
+
+                            <form action="/game/add" method="POST">
+                                <input type="hidden" name="season_id" value="{{$.CurrentSeason.ID}}">
+                                <input type="hidden" name="host_id" value="{{.ID}}">
+
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 mb-1">Date</label>
+                                    <input type="date" name="game_date" value="{{$.CurrentDate}}" required class="w-full p-2 border rounded">
                                 </div>
-                            </li>
-                        {{end}}
-                    </ul>
-                {{else}}
-                    <p class="text-gray-500 italic">All players have been visited this season!</p>
+
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 mb-1">Winner</label>
+                                    <select name="winner_id" class="w-full p-2 border rounded">
+                                        <option value="">Select Winner</option>
+                                        {{range $.AllPlayers}}
+                                        <option value="{{.ID}}">{{.Name}}</option>
+                                        {{end}}
+                                    </select>
+                                </div>
+
+                                <div class="mb-6">
+                                    <label class="block text-gray-700 mb-1">Second Place</label>
+                                    <select name="second_place_id" class="w-full p-2 border rounded">
+                                        <option value="">Select Second Place</option>
+                                        {{range $.AllPlayers}}
+                                        <option value="{{.ID}}">{{.Name}}</option>
+                                        {{end}}
+                                    </select>
+                                </div>
+
+                                <div class="flex justify-end space-x-3">
+                                    <button type="button" onclick="closeModal('addGameModal-{{.ID}}')" class="py-2 px-4 border rounded">
+                                        Cancel
+                                    </button>
+                                    <button type="submit" class="bg-poker-green text-white py-2 px-4 rounded hover:bg-green-700">
+                                        Save Game
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </li>
                 {{end}}
+            </ul>
             {{else}}
-                <h3 class="text-xl font-bold mb-4 text-gray-500 border-b pb-2">Players to Visit</h3>
-                <p class="text-gray-500 italic">Only available for the latest season!</p>
+            <p class="text-gray-500 italic">All players have been visited this season!</p>
+            {{end}}
+            {{else}}
+            <h3 class="text-xl font-bold mb-4 text-gray-500 border-b pb-2">Players to Visit</h3>
+            <p class="text-gray-500 italic">Only available for the latest season!</p>
             {{end}}
         </div>
-        
+
         <!-- Visited players section -->
         <div class="bg-white p-4 rounded shadow">
             <h3 class="text-xl font-bold mb-4 text-poker-red border-b pb-2">Visited Players ({{len .VisitedPlayers}})</h3>
-            
+
             {{if .VisitedPlayers}}
-                <ul class="space-y-2">
-                    {{range .VisitedPlayers}}
-                        <li class="flex justify-between items-center p-2 hover:bg-gray-100 rounded">
-                            <span>{{.Name}}</span>
-                            <span class="text-sm text-gray-600">{{.GameDate.Format "Jan 02, 2006"}}</span>
-                        </li>
-                    {{end}}
-                </ul>
+            <ul class="space-y-2">
+                {{range .VisitedPlayers}}
+                <li class="flex justify-between items-center p-2 hover:bg-gray-100 rounded">
+                    <span>{{.Name}}</span>
+                    <span class="text-sm text-gray-600">{{.GameDate.Format "Jan 02, 2006"}}</span>
+                </li>
+                {{end}}
+            </ul>
             {{else}}
-                <p class="text-gray-500 italic">No players have been visited yet this season.</p>
+            <p class="text-gray-500 italic">No players have been visited yet this season.</p>
             {{end}}
         </div>
     </div>
@@ -108,39 +108,40 @@
 <!-- Games History -->
 <div class="mt-8 bg-white p-4 rounded shadow">
     <h3 class="text-xl font-bold mb-4 border-b pb-2">Game History</h3>
-    
+
     {{if .Games}}
-        <div class="overflow-x-auto">
-            <table class="min-w-full">
-                <thead class="bg-gray-100">
-                    <tr>
-                        <th class="p-2 text-left">Date</th>
-                        <th class="p-2 text-left">Host</th>
-                        <th class="p-2 text-left">Winner</th>
-                        <th class="p-2 text-left">Second Place</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{range .Games}}
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="p-2">{{.GameDate.Format "Jan 02, 2006"}}</td>
-                            <td class="p-2">{{.HostName}}</td>
-                            <td class="p-2 font-medium text-poker-green">{{.WinnerName}}</td>
-                            <td class="p-2 text-gray-600">{{.SecondPlaceName}}</td>
-                        </tr>
-                    {{end}}
-                </tbody>
-            </table>
-        </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="p-2 text-left">Date</th>
+                    <th class="p-2 text-left">Host</th>
+                    <th class="p-2 text-left">Winner</th>
+                    <th class="p-2 text-left">Second Place</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Games}}
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-2">{{.GameDate.Format "Jan 02, 2006"}}</td>
+                    <td class="p-2">{{.HostName}}</td>
+                    <td class="p-2 font-medium text-poker-green">{{.WinnerName}}</td>
+                    <td class="p-2 text-gray-600">{{.SecondPlaceName}}</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
     {{else}}
-        <p class="text-gray-500 italic">No games recorded yet this season.</p>
+    <p class="text-gray-500 italic">No games recorded yet this season.</p>
     {{end}}
 </div>
 
 <!-- Copyable text for messaging -->
+<!--
 <div class="mt-8 bg-white p-4 rounded shadow">
     <h3 class="text-xl font-bold mb-4 border-b pb-2">Copy-Paste Format</h3>
-    
+
     <div class="bg-gray-100 p-4 rounded font-mono text-sm whitespace-pre-wrap">
 Season: {{.CurrentSeason.Name}}
 
@@ -151,7 +152,7 @@ To visit:
 {{range .ToVisitPlayers}}⏳ {{.Name}}
 {{end}}
     </div>
-    
+
     <button onclick="copyToClipboard()" class="mt-3 bg-gray-200 py-1 px-3 rounded text-sm hover:bg-gray-300">
         Copy to Clipboard
     </button>
@@ -167,4 +168,6 @@ function copyToClipboard() {
     });
 }
 </script>
+
+-->
 {{end}}
