@@ -169,6 +169,11 @@ func (h *Handler) SeasonHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.Logger.Printf("DATA: Found %d games for season %d", len(games), seasonID)
+	
+	// Reverse the order of games to show oldest first
+	sort.Slice(games, func(i, j int) bool {
+		return games[i].GameDate.Before(games[j].GameDate)
+	})
 
 	// Separate players into visited and not visited
 	var visited, notVisited []models.PlayerStatus
