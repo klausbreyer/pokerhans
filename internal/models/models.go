@@ -54,7 +54,7 @@ func NewRepository(db *sql.DB) *Repository {
 
 // GetSeasons returns all seasons
 func (r *Repository) GetSeasons() ([]Season, error) {
-	query := "SELECT id, name, created_at FROM seasons ORDER BY created_at DESC"
+	query := "SELECT id, name, created_at FROM seasons ORDER BY id DESC"
 	rows, err := r.DB.Query(query)
 	if err != nil {
 		return nil, err
@@ -84,12 +84,9 @@ func (r *Repository) GetSeasonPlayers(seasonID int) ([]PlayerStatus, error) {
 			IF(g.id IS NULL, '0001-01-01', DATE_FORMAT(g.game_date, '%Y-%m-%d')) as game_date
 		FROM 
 			players p
-		JOIN 
-			season_players sp ON p.id = sp.player_id
-		LEFT JOIN 
-			games g ON p.id = g.host_id AND g.season_id = sp.season_id
-		WHERE 
-			sp.season_id = ?
+		LEFT JOIN (
+			SELECT * FROM games WHERE season_id = ?
+		) g ON p.id = g.host_id
 		ORDER BY 
 			CASE WHEN g.id IS NULL THEN 0 ELSE 1 END, p.name
 	`

@@ -1,17 +1,19 @@
 {{define "layout"}}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Poker Hans - Season Tracker</title>
+    <title>Pokerhans - The street always wins</title>
     <link rel="stylesheet" href="/static/css/output.css">
 </head>
+
 <body class="bg-gray-100 min-h-screen">
     <header class="bg-poker-green text-white p-4 shadow-md">
         <div class="container mx-auto">
-            <h1 class="text-3xl font-bold">Poker Hans</h1>
-            <p class="text-sm">Track your poker games with friends</p>
+            <h1 class="text-3xl font-bold">Pokerhans</h1>
+            <p class="text-sm">The street always wins!</p>
         </div>
     </header>
 
@@ -20,7 +22,7 @@
     </main>
 
     <footer class="bg-gray-200 text-center p-4 mt-8">
-        <p>&copy; {{.CurrentYear}} Poker Hans</p>
+        <p>&copy; {{.CurrentYear}} <a href="https://v01.io" target="_blank" class="hover:underline">Klaus Breyer</a></p>
     </footer>
 
     <script>
@@ -34,5 +36,6 @@
         }
     </script>
 </body>
+
 </html>
 {{end}}

@@ -199,6 +199,15 @@ func (h *Handler) SeasonHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	h.Logger.Printf("DATA: Current season name: %s", currentSeason.Name)
 
+	// Determine if this is the latest season (highest ID)
+	var highestID int
+	for _, s := range seasons {
+		if s.ID > highestID {
+			highestID = s.ID
+		}
+	}
+	isLatestSeason := seasonID == highestID
+
 	data := struct {
 		Seasons        []models.Season
 		CurrentSeason  models.Season
@@ -208,6 +217,7 @@ func (h *Handler) SeasonHandler(w http.ResponseWriter, r *http.Request) {
 		AllPlayers     []models.Player
 		CurrentDate    string
 		CurrentYear    int
+		IsLatestSeason bool
 	}{
 		Seasons:        seasons,
 		CurrentSeason:  currentSeason,
@@ -217,6 +227,7 @@ func (h *Handler) SeasonHandler(w http.ResponseWriter, r *http.Request) {
 		AllPlayers:     allPlayers,
 		CurrentDate:    time.Now().Format("2006-01-02"),
 		CurrentYear:    time.Now().Year(),
+		IsLatestSeason: isLatestSeason,
 	}
 
 	h.Logger.Printf("RENDER: Rendering layout template with season content")
