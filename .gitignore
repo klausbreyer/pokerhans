@@ -27,3 +27,4 @@ web/static/css/output.css
 
 # Build artifacts
 dist/
+.env.prod
