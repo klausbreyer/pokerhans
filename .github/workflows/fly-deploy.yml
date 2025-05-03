@@ -1,18 +1,59 @@
 # See https://fly.io/docs/app-guides/continuous-deployment-with-github-actions/
 
-name: Fly Deploy
+name: Build and Deploy
 on:
   push:
     branches:
       - main
 jobs:
-  deploy:
-    name: Deploy app
+  build-and-deploy:
+    name: Build and Deploy app
     runs-on: ubuntu-latest
     concurrency: deploy-group    # optional: ensure only one action runs at a time
     steps:
-      - uses: actions/checkout@v4
-      - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy --remote-only
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          
+      - name: Go Cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+        
+      - name: Create bin directory
+        run: mkdir -p bin
+        
+      - name: Install Tailwind CSS (using Makefile)
+        run: make tailwind-install
+        
+      - name: Build CSS with Tailwind (using Makefile)
+        run: make css
+          
+      - name: Build Go application (using Makefile)
+        run: make build
+        
+      - name: Setup Fly.io CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+        
+      - name: Verify CSS output exists
+        run: |
+          if [ ! -f "./web/static/css/output.css" ]; then
+            echo "Error: output.css was not generated!"
+            exit 1
+          fi
+          echo "CSS file successfully generated"
+          ls -la ./web/static/css/
+      
+      - name: Deploy to Fly.io
+        run: flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

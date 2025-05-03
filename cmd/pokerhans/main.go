@@ -17,12 +17,8 @@ func main() {
 	// Set up logger
 	logger := log.New(os.Stdout, "pokerhans: ", log.LstdFlags|log.Lshortfile)
 
-	// Reset environment variables
-	os.Unsetenv("DB_USER")
-	os.Unsetenv("DB_PASS")
-	os.Unsetenv("DB_HOST")
-	os.Unsetenv("DB_PORT") 
-	os.Unsetenv("DB_NAME")
+	// We no longer reset environment variables here
+	// This allows the Fly.io environment variables to take effect
 
 	// Load environment variables from .env file
 	envPath := filepath.Join(".", ".env")

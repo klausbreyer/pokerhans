@@ -12,9 +12,6 @@
 **/*.so
 **/*.dylib
 
-# Output files
-**/web/static/css/output.css
-
 # IDE files
 **/.idea
 **/.vscode
