@@ -184,6 +184,11 @@ func (h *Handler) SeasonHandler(w http.ResponseWriter, r *http.Request) {
 	sort.Slice(visited, func(i, j int) bool {
 		return visited[i].GameDate.Before(visited[j].GameDate)
 	})
+	
+	// Sort players to visit by created_at date (oldest first)
+	sort.Slice(notVisited, func(i, j int) bool {
+		return notVisited[i].CreatedAt.Before(notVisited[j].CreatedAt)
+	})
 	h.Logger.Printf("DATA: %d players visited, %d players to visit", len(visited), len(notVisited))
 
 	// Get all players for the dropdowns
