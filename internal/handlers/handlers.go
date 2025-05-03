@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"time"
 
@@ -178,6 +179,11 @@ func (h *Handler) SeasonHandler(w http.ResponseWriter, r *http.Request) {
 			notVisited = append(notVisited, p)
 		}
 	}
+	
+	// Sort visited players by game date (oldest first)
+	sort.Slice(visited, func(i, j int) bool {
+		return visited[i].GameDate.Before(visited[j].GameDate)
+	})
 	h.Logger.Printf("DATA: %d players visited, %d players to visit", len(visited), len(notVisited))
 
 	// Get all players for the dropdowns
