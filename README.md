@@ -1,4 +1,4 @@
-# Poker Hans
+# Pokerhans
 
 A simple web application for tracking poker games within a local group, organized by seasons. Each player hosts one game per season, and the app keeps track of hosts, winners, and runners-up.
 
@@ -78,11 +78,13 @@ This script starts both the Tailwind CSS watcher and the Go server in one termin
 **Option 2: Using separate terminals**
 
 Terminal 1 (Tailwind CSS watcher):
+
 ```bash
 make css-watch
 ```
 
 Terminal 2 (Go server):
+
 ```bash
 make run
 # or
@@ -123,7 +125,7 @@ INSERT INTO seasons (name) VALUES ('Season 2023');
 INSERT INTO players (name) VALUES ('John Doe');
 
 -- Associate a player with a season
-INSERT INTO season_players (season_id, player_id) 
+INSERT INTO season_players (season_id, player_id)
 VALUES (1, 1);
 ```
 
