@@ -1,1 +1,29 @@
+# Environment variables
 .env
+
+# Claude settings
+**/.claude/settings.local.json
+
+# Binaries
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Output files
+web/static/css/output.css
+
+# IDE files
+.idea/
+.vscode/
+
+# Go files
+*.test
+*.out
+
+# macOS files
+.DS_Store
+
+# Build artifacts
+dist/

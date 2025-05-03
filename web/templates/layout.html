@@ -1,0 +1,38 @@
+{{define "layout"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poker Hans - Season Tracker</title>
+    <link rel="stylesheet" href="/static/css/output.css">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <header class="bg-poker-green text-white p-4 shadow-md">
+        <div class="container mx-auto">
+            <h1 class="text-3xl font-bold">Poker Hans</h1>
+            <p class="text-sm">Track your poker games with friends</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4">
+        {{template "content" .}}
+    </main>
+
+    <footer class="bg-gray-200 text-center p-4 mt-8">
+        <p>&copy; {{.CurrentYear}} Poker Hans</p>
+    </footer>
+
+    <script>
+        // Add any JavaScript here
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
+{{end}}

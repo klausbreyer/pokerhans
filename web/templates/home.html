@@ -1,0 +1,22 @@
+{{define "content"}}
+<div class="text-center py-12">
+    <h2 class="text-2xl font-bold mb-4">Welcome to Poker Hans</h2>
+    
+    {{if .Seasons}}
+        <div class="mb-8">
+            <h3 class="text-xl mb-4">Select a Season</h3>
+            <div class="flex justify-center space-x-4">
+                {{range .Seasons}}
+                    <a href="/season/{{.ID}}" class="bg-poker-green text-white py-2 px-4 rounded hover:bg-green-700 transition">
+                        {{.Name}}
+                    </a>
+                {{end}}
+            </div>
+        </div>
+    {{else}}
+        <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-8">
+            <p>No seasons available. Please add a season through the database.</p>
+        </div>
+    {{end}}
+</div>
+{{end}}

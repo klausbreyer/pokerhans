@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: var(--color-green-700);
+  --color-secondary: var(--color-red-600);
+  --color-bg: #f3f4f6;
+  --color-text: #1f2937;
+  
+  /* Custom poker colors */
+  --color-poker-green: #2d6a4f;
+  --color-poker-red: #c1121f;
+}
+
+/* Custom CSS styles */
+.card-hover {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.copy-btn {
+  transition: all 0.2s;
+}
+
+.copy-btn:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
