@@ -1,4 +1,4 @@
-.PHONY: run build test css css-watch tailwind-install migrate-up migrate-down migrate-create
+.PHONY: run build test css css-watch tailwind-install migrate-up migrate-down migrate-create seed-demo
 
 # Default target
 all: css build run
@@ -84,10 +84,17 @@ migrate-force:
 # Install Tailwind CSS binary
 tailwind-install:
 	@if [ "$$(uname)" = "Darwin" ]; then \
-		echo "Installing Tailwind CSS for macOS..."; \
-		curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-macos-x64; \
-		chmod +x tailwindcss-macos-x64; \
-		mv tailwindcss-macos-x64 bin/tailwindcss; \
+		if [ "$$(uname -m)" = "arm64" ]; then \
+			echo "Installing Tailwind CSS for macOS ARM64..."; \
+			curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-macos-arm64; \
+			chmod +x tailwindcss-macos-arm64; \
+			mv tailwindcss-macos-arm64 bin/tailwindcss; \
+		else \
+			echo "Installing Tailwind CSS for macOS x64..."; \
+			curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-macos-x64; \
+			chmod +x tailwindcss-macos-x64; \
+			mv tailwindcss-macos-x64 bin/tailwindcss; \
+		fi; \
 	elif [ "$$(uname)" = "Linux" ]; then \
 		echo "Installing Tailwind CSS for Linux..."; \
 		curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64; \
@@ -122,3 +129,13 @@ dev:
 	@echo "Start two terminals:"
 	@echo "Terminal 1: make css-watch"
 	@echo "Terminal 2: make run"
+
+# Generate demo data
+seed-demo:
+	@. ./.env 2>/dev/null || true; \
+	export DB_USER=$${DB_USER:-root}; \
+	export DB_PASS=$${DB_PASS:-PASSPASS}; \
+	export DB_HOST=$${DB_HOST:-localhost}; \
+	export DB_PORT=$${DB_PORT:-3306}; \
+	export DB_NAME=$${DB_NAME:-pokerhans}; \
+	go run ./cmd/demogen
