@@ -42,7 +42,7 @@ func main() {
 	// Static files
 	staticDir := "./web/static"
 	logger.Printf("DEBUG: Setting up static file server for directory: %s", staticDir)
-	
+
 	// Check if static directory exists
 	if _, err := os.Stat(staticDir); os.IsNotExist(err) {
 		logger.Printf("ERROR: Static directory does not exist: %s", staticDir)
@@ -57,7 +57,7 @@ func main() {
 			}
 		}
 	}
-	
+
 	// Create a custom file server handler with logging
 	fileServer := http.FileServer(http.Dir(staticDir))
 	http.Handle("/static/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +76,7 @@ func main() {
 		logger.Printf("METHOD: %s", r.Method)
 		logger.Printf("REMOTE: %s", r.RemoteAddr)
 		logger.Printf("USER-AGENT: %s", r.UserAgent())
-		
+
 		if r.URL.Path != "/" {
 			if strings.HasPrefix(r.URL.Path, "/season/") && r.Method == "GET" {
 				logger.Printf("HANDLER: SeasonHandler")
@@ -87,7 +87,7 @@ func main() {
 			http.NotFound(w, r)
 			return
 		}
-		
+
 		logger.Printf("HANDLER: HomeHandler")
 		h.HomeHandler(w, r)
 	})
@@ -97,15 +97,31 @@ func main() {
 		logger.Printf("PATH: /game/add")
 		logger.Printf("METHOD: %s", r.Method)
 		logger.Printf("REMOTE: %s", r.RemoteAddr)
-		
+
 		if r.Method != "POST" {
 			logger.Printf("HANDLER: MethodNotAllowed (405)")
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		
+
 		logger.Printf("HANDLER: AddGameHandler")
 		h.AddGameHandler(w, r)
+	})
+
+	http.HandleFunc("/game/update-date", func(w http.ResponseWriter, r *http.Request) {
+		logger.Printf("=== ROUTE CALL ===")
+		logger.Printf("PATH: /game/update-date")
+		logger.Printf("METHOD: %s", r.Method)
+		logger.Printf("REMOTE: %s", r.RemoteAddr)
+
+		if r.Method != "POST" {
+			logger.Printf("HANDLER: MethodNotAllowed (405)")
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		logger.Printf("HANDLER: UpdateGameDateHandler")
+		h.UpdateGameDateHandler(w, r)
 	})
 
 	// Start server
@@ -121,6 +137,7 @@ func main() {
 	logger.Printf("  - http://localhost:%s/           -> HomeHandler", port)
 	logger.Printf("  - http://localhost:%s/season/:id -> SeasonHandler", port)
 	logger.Printf("  - http://localhost:%s/game/add   -> AddGameHandler (POST)", port)
+	logger.Printf("  - http://localhost:%s/game/update-date -> UpdateGameDateHandler (POST)", port)
 	logger.Printf("  - http://localhost:%s/static/*   -> Static files", port)
 	logger.Printf("Migration Note: Run 'make migrate-up' if you need to apply database migrations")
 	logger.Printf("Tailwind CSS: Run 'make css-watch' in another terminal for CSS hot reloading")

@@ -6,11 +6,11 @@ import (
 	"os"
 	"path/filepath"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	_ "github.com/go-sql-driver/mysql"
-	
+
 	"github.com/klausbreyer/pokerhans/internal/config"
 )
 
@@ -18,7 +18,7 @@ import (
 func Connect() (*sql.DB, error) {
 	dbConfig := config.GetDBConfig()
 	dsn := dbConfig.DSN()
-	
+
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		return nil, err
@@ -44,14 +44,14 @@ func InitSchema(db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("failed to get working directory: %w", err)
 	}
-	
+
 	migrationsPath := filepath.Join(workDir, "migrations", "mysql")
 	migrationSource := fmt.Sprintf("file://%s", migrationsPath)
-	
+
 	// Create a new migrate instance
 	m, err := migrate.NewWithDatabaseInstance(
 		migrationSource,
-		"mysql", 
+		"mysql",
 		driver,
 	)
 	if err != nil {
@@ -62,6 +62,6 @@ func InitSchema(db *sql.DB) error {
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
 		return fmt.Errorf("failed to apply migrations: %w", err)
 	}
-	
+
 	return nil
 }

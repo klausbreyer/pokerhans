@@ -9,11 +9,11 @@ import (
 
 // DBConfig contains database connection configuration
 type DBConfig struct {
-	User   string
-	Pass   string
-	Host   string
-	Port   string
-	Name   string
+	User string
+	Pass string
+	Host string
+	Port string
+	Name string
 }
 
 // GetDBConfig returns the database configuration from environment variables
@@ -29,13 +29,13 @@ func GetDBConfig() DBConfig {
 
 // DSN returns a formatted MySQL DSN (Data Source Name) string
 func (c DBConfig) DSN() string {
-	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", 
+	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
 		c.User, c.Pass, c.Host, c.Port, c.Name)
 }
 
 // MigrateDSN returns a DSN string formatted for golang-migrate CLI
 func (c DBConfig) MigrateDSN() string {
-	return fmt.Sprintf("mysql://%s:%s@tcp(%s:%s)/%s?parseTime=true", 
+	return fmt.Sprintf("mysql://%s:%s@tcp(%s:%s)/%s?parseTime=true",
 		c.User, c.Pass, c.Host, c.Port, c.Name)
 }
 
@@ -66,22 +66,22 @@ func LoadEnv(filePath string) error {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		
+
 		// Skip comments and empty lines
 		if strings.HasPrefix(line, "#") || strings.TrimSpace(line) == "" {
 			continue
 		}
-		
+
 		// Split on the first equals sign
 		parts := strings.SplitN(line, "=", 2)
 		if len(parts) != 2 {
 			continue
 		}
-		
+
 		// Set the environment variable if it's not already set
 		key := strings.TrimSpace(parts[0])
 		value := strings.TrimSpace(parts[1])
-		
+
 		// Only set if not already set (allows command line to override .env)
 		if os.Getenv(key) == "" {
 			os.Setenv(key, value)

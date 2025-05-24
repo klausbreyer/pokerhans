@@ -45,7 +45,7 @@ func New(logger *log.Logger, db *sql.DB) *Handler {
 	// Simplify template parsing - use Must to panic on errors
 	logger.Printf("DEBUG: Using simple template.ParseGlob approach")
 	tmpl := template.Must(template.ParseGlob(templatesPath))
-	
+
 	// Log the templates we found
 	logger.Printf("DEBUG: Templates found:")
 	for _, t := range tmpl.Templates() {
@@ -88,7 +88,7 @@ func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	}{
 		CurrentYear: time.Now().Year(),
 	}
-	
+
 	// Capture the template output to inspect it
 	var buf bytes.Buffer
 	err = h.Tmpl.ExecuteTemplate(&buf, "layout", data)
@@ -97,7 +97,7 @@ func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to render template", http.StatusInternalServerError)
 		return
 	}
-	
+
 	output := buf.String()
 	h.Logger.Printf("HOME_TEMPLATE_OUTPUT_LENGTH: %d bytes", len(output))
 	if len(output) == 0 {
@@ -107,10 +107,10 @@ func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		h.Logger.Printf("HOME_TEMPLATE_OUTPUT_FIRST_50: %s...", output[:50])
 	}
-	
+
 	// Set Content-Type header
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	
+
 	// Write the output to the response
 	_, err = w.Write(buf.Bytes())
 	if err != nil {
@@ -169,7 +169,7 @@ func (h *Handler) SeasonHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.Logger.Printf("DATA: Found %d games for season %d", len(games), seasonID)
-	
+
 	// Reverse the order of games to show oldest first
 	sort.Slice(games, func(i, j int) bool {
 		return games[i].GameDate.Before(games[j].GameDate)
@@ -184,12 +184,12 @@ func (h *Handler) SeasonHandler(w http.ResponseWriter, r *http.Request) {
 			notVisited = append(notVisited, p)
 		}
 	}
-	
+
 	// Sort visited players by game date (oldest first)
 	sort.Slice(visited, func(i, j int) bool {
 		return visited[i].GameDate.Before(visited[j].GameDate)
 	})
-	
+
 	// Sort players to visit by created_at date (oldest first)
 	sort.Slice(notVisited, func(i, j int) bool {
 		return notVisited[i].CreatedAt.Before(notVisited[j].CreatedAt)
@@ -247,7 +247,7 @@ func (h *Handler) SeasonHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.Logger.Printf("RENDER: Rendering layout template with season content")
-	
+
 	// Capture the template output to inspect it
 	var buf bytes.Buffer
 	err = h.Tmpl.ExecuteTemplate(&buf, "layout", data)
@@ -256,7 +256,7 @@ func (h *Handler) SeasonHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to render template", http.StatusInternalServerError)
 		return
 	}
-	
+
 	output := buf.String()
 	h.Logger.Printf("TEMPLATE_OUTPUT_LENGTH: %d bytes", len(output))
 	if len(output) == 0 {
@@ -266,24 +266,24 @@ func (h *Handler) SeasonHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		h.Logger.Printf("TEMPLATE_OUTPUT_FIRST_50: %s...", output[:50])
 	}
-	
+
 	// Set Content-Type header
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	
+
 	// Write the output to the response
 	_, err = w.Write(buf.Bytes())
 	if err != nil {
 		h.Logger.Printf("ERROR: Failed to write response: %v", err)
 		return
 	}
-	
+
 	h.Logger.Printf("SUCCESS: Season page rendered successfully")
 }
 
 // AddGameHandler handles adding a new game
 func (h *Handler) AddGameHandler(w http.ResponseWriter, r *http.Request) {
 	h.Logger.Printf("ACTION: AddGameHandler - Processing game submission")
-	
+
 	if err := r.ParseForm(); err != nil {
 		h.Logger.Printf("ERROR: Parsing form data: %v", err)
 		http.Error(w, "Invalid form data", http.StatusBadRequest)
@@ -341,18 +341,18 @@ func (h *Handler) AddGameHandler(w http.ResponseWriter, r *http.Request) {
 	// Log parameters with pointer-safe handling
 	// Create string representations for logging
 	var winnerIDLogStr, secondPlaceIDLogStr string
-	
+
 	winnerIDLogStr = "null"
 	if winnerID != nil {
 		winnerIDLogStr = fmt.Sprintf("%d", *winnerID)
 	}
-	
+
 	secondPlaceIDLogStr = "null"
 	if secondPlaceID != nil {
 		secondPlaceIDLogStr = fmt.Sprintf("%d", *secondPlaceID)
 	}
-	
-	h.Logger.Printf("PARAM: Season ID = %d, Host ID = %d, Winner ID = %s, Second Place ID = %s, Game Date = %s", 
+
+	h.Logger.Printf("PARAM: Season ID = %d, Host ID = %d, Winner ID = %s, Second Place ID = %s, Game Date = %s",
 		seasonID, hostID, winnerIDLogStr, secondPlaceIDLogStr, gameDate.Format("2006-01-02"))
 
 	// Add game to database
@@ -364,6 +364,57 @@ func (h *Handler) AddGameHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.Logger.Printf("SUCCESS: Game added successfully")
+
+	// Redirect back to season page
+	redirectURL := "/season/" + strconv.Itoa(seasonID)
+	h.Logger.Printf("REDIRECT: To %s", redirectURL)
+	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
+}
+
+// UpdateGameDateHandler handles updating game dates
+func (h *Handler) UpdateGameDateHandler(w http.ResponseWriter, r *http.Request) {
+	h.Logger.Printf("ACTION: UpdateGameDateHandler - Processing game date update")
+
+	if err := r.ParseForm(); err != nil {
+		h.Logger.Printf("ERROR: Parsing form data: %v", err)
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+
+	// Parse form values
+	gameID, err := strconv.Atoi(r.FormValue("game_id"))
+	if err != nil {
+		h.Logger.Printf("ERROR: Invalid game_id: %s", r.FormValue("game_id"))
+		http.Error(w, "Invalid game ID", http.StatusBadRequest)
+		return
+	}
+
+	seasonID, err := strconv.Atoi(r.FormValue("season_id"))
+	if err != nil {
+		h.Logger.Printf("ERROR: Invalid season_id: %s", r.FormValue("season_id"))
+		http.Error(w, "Invalid season ID", http.StatusBadRequest)
+		return
+	}
+
+	newDate, err := time.Parse("2006-01-02", r.FormValue("new_date"))
+	if err != nil {
+		h.Logger.Printf("ERROR: Invalid new_date format: %s", r.FormValue("new_date"))
+		http.Error(w, "Invalid date format", http.StatusBadRequest)
+		return
+	}
+
+	h.Logger.Printf("PARAM: Game ID = %d, Season ID = %d, New Date = %s",
+		gameID, seasonID, newDate.Format("2006-01-02"))
+
+	// Update game date in database
+	err = h.Repo.UpdateGameDate(gameID, newDate)
+	if err != nil {
+		h.Logger.Printf("ERROR: Updating game date in database: %v", err)
+		http.Error(w, "Failed to update game date", http.StatusInternalServerError)
+		return
+	}
+
+	h.Logger.Printf("SUCCESS: Game date updated successfully")
 
 	// Redirect back to season page
 	redirectURL := "/season/" + strconv.Itoa(seasonID)

@@ -31,7 +31,42 @@
                 <tbody>
                     {{range .Games}}
                     <tr class="border-b hover:bg-gray-50">
-                        <td class="p-2">{{.GameDate.Format "Jan 02, 2006"}}</td>
+                        <td class="p-2">
+                            {{.GameDate.Format "Jan 02, 2006"}}
+                            {{if $.IsLatestSeason}}
+                            <button onclick="openModal('editGameModal-{{.ID}}')" class="ml-2 text-blue-500 hover:text-blue-700 text-xs underline" style="font-size: 10px;">
+                                edit
+                            </button>
+                            {{end}}
+
+                            {{if $.IsLatestSeason}}
+                            <!-- Modal for editing game date -->
+                            <div id="editGameModal-{{.ID}}" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+                                <div class="bg-white p-6 rounded shadow-lg max-w-md w-full">
+                                    <h4 class="text-xl font-bold mb-4">Edit Game Date</h4>
+
+                                    <form action="/game/update-date" method="POST">
+                                        <input type="hidden" name="game_id" value="{{.ID}}">
+                                        <input type="hidden" name="season_id" value="{{$.CurrentSeason.ID}}">
+
+                                        <div class="mb-6">
+                                            <label class="block text-gray-700 mb-1">New Date</label>
+                                            <input type="date" name="new_date" value="{{.GameDate.Format "2006-01-02"}}" required class="w-full p-2 border rounded">
+                                        </div>
+
+                                        <div class="flex justify-end space-x-3 mt-4">
+                                            <button type="button" onclick="closeModal('editGameModal-{{.ID}}')" class="py-2 px-4 border border-gray-300 rounded hover:bg-gray-100">
+                                                Cancel
+                                            </button>
+                                            <button type="submit" class="py-2 px-4 bg-green-600 text-white rounded hover:bg-green-700 font-medium" style="background-color: #16a34a !important; color: white !important;">
+                                                Save
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            {{end}}
+                        </td>
                         <td class="p-2">{{.HostName}}</td>
                         <td class="p-2 font-medium text-poker-green">{{.WinnerName}}</td>
                         <td class="p-2 text-gray-600">{{.SecondPlaceName}}</td>

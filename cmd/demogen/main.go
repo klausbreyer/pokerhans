@@ -87,17 +87,17 @@ func main() {
 	for seasonName, seasonID := range seasonIDs {
 		// Select a random subset of players for each season (between 10-15 players)
 		numPlayers := rand.Intn(6) + 10 // 10-15 players
-		
+
 		// Create a copy of player names to shuffle
 		shuffledPlayers := make([]string, len(playerNames))
 		copy(shuffledPlayers, playerNames)
 		rand.Shuffle(len(shuffledPlayers), func(i, j int) {
 			shuffledPlayers[i], shuffledPlayers[j] = shuffledPlayers[j], shuffledPlayers[i]
 		})
-		
+
 		// Take the first numPlayers players
 		seasonPlayers := shuffledPlayers[:numPlayers]
-		
+
 		for _, playerName := range seasonPlayers {
 			playerID := playerIDs[playerName]
 			// Add player to season
@@ -108,7 +108,7 @@ func main() {
 			}
 			fmt.Printf("Added player %s to season %s\n", playerName, seasonName)
 		}
-		
+
 		// Create games for this season
 		createGamesForSeason(database, logger, seasonID, seasonName, seasonPlayers, playerIDs)
 	}
@@ -134,44 +134,44 @@ func createGamesForSeason(database *sql.DB, logger *log.Logger, seasonID int, se
 
 	// Create between 10-20 games for the season
 	numGames := rand.Intn(11) + 10 // 10-20 games
-	
+
 	for i := 0; i < numGames; i++ {
 		// Select random date for the game (within a 3-month period from start date)
 		gameDate := startDate.Add(time.Duration(rand.Intn(90)) * 24 * time.Hour)
-		
+
 		// Select random host, winner, and second place
 		rand.Shuffle(len(seasonPlayers), func(i, j int) {
 			seasonPlayers[i], seasonPlayers[j] = seasonPlayers[j], seasonPlayers[i]
 		})
-		
+
 		hostName := seasonPlayers[0]
 		hostID := playerIDs[hostName]
-		
+
 		// Some games might not have winners recorded yet (about 20% chance)
 		var winnerID, secondPlaceID *int
 		if rand.Float32() > 0.2 {
 			// Ensure winner and second place are different from host and each other
 			winnerName := seasonPlayers[1]
 			secondPlaceName := seasonPlayers[2]
-			
+
 			winnerIDValue := playerIDs[winnerName]
 			secondPlaceIDValue := playerIDs[secondPlaceName]
-			
+
 			winnerID = &winnerIDValue
 			secondPlaceID = &secondPlaceIDValue
 		}
-		
+
 		// Add the game
 		_, err := database.Exec(
 			"INSERT INTO games (season_id, host_id, winner_id, second_place_id, game_date) VALUES (?, ?, ?, ?, ?)",
 			seasonID, hostID, winnerID, secondPlaceID, gameDate.Format("2006-01-02"),
 		)
 		if err != nil {
-			logger.Printf("Warning: Failed to create game for %s on %s: %v", 
+			logger.Printf("Warning: Failed to create game for %s on %s: %v",
 				hostName, gameDate.Format("2006-01-02"), err)
 			continue
 		}
-		
+
 		winnerStr := "unknown"
 		secondStr := "unknown"
 		if winnerID != nil {
@@ -184,7 +184,7 @@ func createGamesForSeason(database *sql.DB, logger *log.Logger, seasonID int, se
 				}
 			}
 		}
-		
+
 		fmt.Printf("Created game: Season %s, Date: %s, Host: %s, Winner: %s, Second: %s\n",
 			seasonName, gameDate.Format("2006-01-02"), hostName, winnerStr, secondStr)
 	}

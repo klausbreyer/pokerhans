@@ -28,7 +28,7 @@ type Game struct {
 	SecondPlaceID *int      `json:"second_place_id"`
 	GameDate      time.Time `json:"game_date"`
 	CreatedAt     time.Time `json:"created_at"`
-	
+
 	// Additional fields for display
 	HostName        string `json:"host_name"`
 	WinnerName      string `json:"winner_name"`
@@ -90,7 +90,7 @@ func (r *Repository) GetSeasonPlayers(seasonID int) ([]PlayerStatus, error) {
 		ORDER BY 
 			CASE WHEN g.id IS NULL THEN 0 ELSE 1 END, p.name
 	`
-	
+
 	rows, err := r.DB.Query(query, seasonID)
 	if err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func (r *Repository) GetSeasonPlayers(seasonID int) ([]PlayerStatus, error) {
 		if err := rows.Scan(&p.ID, &p.Name, &p.CreatedAt, &p.HasHosted, &gameDateStr); err != nil {
 			return nil, err
 		}
-		
+
 		// Parse the game date string
 		p.GameDate, err = time.Parse("2006-01-02", gameDateStr)
 		if err != nil {
@@ -153,7 +153,7 @@ func (r *Repository) GetGames(seasonID int) ([]Game, error) {
 		ORDER BY 
 			g.game_date DESC
 	`
-	
+
 	rows, err := r.DB.Query(query, seasonID)
 	if err != nil {
 		return nil, err
@@ -164,12 +164,12 @@ func (r *Repository) GetGames(seasonID int) ([]Game, error) {
 	for rows.Next() {
 		var g Game
 		if err := rows.Scan(
-			&g.ID, 
-			&g.SeasonID, 
-			&g.HostID, 
-			&g.WinnerID, 
-			&g.SecondPlaceID, 
-			&g.GameDate, 
+			&g.ID,
+			&g.SeasonID,
+			&g.HostID,
+			&g.WinnerID,
+			&g.SecondPlaceID,
+			&g.GameDate,
 			&g.CreatedAt,
 			&g.HostName,
 			&g.WinnerName,
@@ -202,4 +202,11 @@ func (r *Repository) GetAllPlayers() ([]Player, error) {
 	}
 
 	return players, nil
+}
+
+// UpdateGameDate updates the date of a specific game
+func (r *Repository) UpdateGameDate(gameID int, newDate time.Time) error {
+	query := "UPDATE games SET game_date = ? WHERE id = ?"
+	_, err := r.DB.Exec(query, newDate, gameID)
+	return err
 }
