@@ -16,6 +16,8 @@ import (
 	"github.com/klausbreyer/pokerhans/internal/models"
 )
 
+const leaderboardStartSeasonID = 4
+
 // Handler holds dependencies for the handlers
 type Handler struct {
 	Logger *log.Logger
@@ -84,8 +86,12 @@ func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	// No seasons, render empty home page
 	h.Logger.Printf("RENDER: Rendering layout template with home content")
 	data := struct {
+		Page        string
+		Seasons     []models.Season
 		CurrentYear int
 	}{
+		Page:        "home",
+		Seasons:     seasons,
 		CurrentYear: time.Now().Year(),
 	}
 
@@ -225,6 +231,7 @@ func (h *Handler) SeasonHandler(w http.ResponseWriter, r *http.Request) {
 	isLatestSeason := seasonID == highestID
 
 	data := struct {
+		Page           string
 		Seasons        []models.Season
 		CurrentSeason  models.Season
 		VisitedPlayers []models.PlayerStatus
@@ -235,6 +242,7 @@ func (h *Handler) SeasonHandler(w http.ResponseWriter, r *http.Request) {
 		CurrentYear    int
 		IsLatestSeason bool
 	}{
+		Page:           "season",
 		Seasons:        seasons,
 		CurrentSeason:  currentSeason,
 		VisitedPlayers: visited,
@@ -278,6 +286,76 @@ func (h *Handler) SeasonHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.Logger.Printf("SUCCESS: Season page rendered successfully")
+}
+
+// LeaderboardHandler handles the leaderboard view.
+func (h *Handler) LeaderboardHandler(w http.ResponseWriter, r *http.Request) {
+	h.Logger.Printf("ACTION: LeaderboardHandler - Getting leaderboard data")
+
+	seasons, err := h.Repo.GetSeasons()
+	if err != nil {
+		h.Logger.Printf("ERROR: Getting seasons failed: %v", err)
+		http.Error(w, "Failed to load seasons", http.StatusInternalServerError)
+		return
+	}
+
+	overallWins, err := h.Repo.GetOverallWinsLeaderboard()
+	if err != nil {
+		h.Logger.Printf("ERROR: Getting overall wins leaderboard failed: %v", err)
+		http.Error(w, "Failed to load leaderboard", http.StatusInternalServerError)
+		return
+	}
+
+	pointsLeaderboard, err := h.Repo.GetPointsLeaderboardSinceSeason(leaderboardStartSeasonID)
+	if err != nil {
+		h.Logger.Printf("ERROR: Getting points leaderboard failed: %v", err)
+		http.Error(w, "Failed to load leaderboard", http.StatusInternalServerError)
+		return
+	}
+
+	var latestSeasonID int
+	for _, season := range seasons {
+		if season.ID > latestSeasonID {
+			latestSeasonID = season.ID
+		}
+	}
+
+	data := struct {
+		Page                   string
+		Seasons                []models.Season
+		OverallWins            []models.LeaderboardEntry
+		PointsLeaderboard      []models.LeaderboardEntry
+		LeaderboardStartSeason int
+		LatestSeasonID         int
+		CurrentYear            int
+	}{
+		Page:                   "leaderboard",
+		Seasons:                seasons,
+		OverallWins:            overallWins,
+		PointsLeaderboard:      pointsLeaderboard,
+		LeaderboardStartSeason: leaderboardStartSeasonID,
+		LatestSeasonID:         latestSeasonID,
+		CurrentYear:            time.Now().Year(),
+	}
+
+	h.Logger.Printf("RENDER: Rendering layout template with leaderboard content")
+
+	var buf bytes.Buffer
+	err = h.Tmpl.ExecuteTemplate(&buf, "layout", data)
+	if err != nil {
+		h.Logger.Printf("ERROR: Template rendering failed: %v", err)
+		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, err = w.Write(buf.Bytes())
+	if err != nil {
+		h.Logger.Printf("ERROR: Failed to write leaderboard response: %v", err)
+		return
+	}
+
+	h.Logger.Printf("SUCCESS: Leaderboard page rendered successfully")
 }
 
 // AddGameHandler handles adding a new game

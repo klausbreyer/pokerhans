@@ -70,6 +70,22 @@ func main() {
 	}))
 
 	// Routes
+	http.HandleFunc("/leaderboard", func(w http.ResponseWriter, r *http.Request) {
+		logger.Printf("=== ROUTE CALL ===")
+		logger.Printf("PATH: /leaderboard")
+		logger.Printf("METHOD: %s", r.Method)
+		logger.Printf("REMOTE: %s", r.RemoteAddr)
+
+		if r.Method != "GET" {
+			logger.Printf("HANDLER: MethodNotAllowed (405)")
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		logger.Printf("HANDLER: LeaderboardHandler")
+		h.LeaderboardHandler(w, r)
+	})
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		logger.Printf("=== ROUTE CALL ===")
 		logger.Printf("PATH: %s", r.URL.Path)
@@ -136,6 +152,7 @@ func main() {
 	logger.Printf("ROUTES:")
 	logger.Printf("  - http://localhost:%s/           -> HomeHandler", port)
 	logger.Printf("  - http://localhost:%s/season/:id -> SeasonHandler", port)
+	logger.Printf("  - http://localhost:%s/leaderboard -> LeaderboardHandler", port)
 	logger.Printf("  - http://localhost:%s/game/add   -> AddGameHandler (POST)", port)
 	logger.Printf("  - http://localhost:%s/game/update-date -> UpdateGameDateHandler (POST)", port)
 	logger.Printf("  - http://localhost:%s/static/*   -> Static files", port)

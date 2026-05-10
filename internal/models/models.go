@@ -42,6 +42,16 @@ type PlayerStatus struct {
 	GameDate  time.Time `json:"game_date,omitempty"`
 }
 
+// LeaderboardEntry represents a ranked player in a leaderboard.
+type LeaderboardEntry struct {
+	Rank       int    `json:"rank"`
+	PlayerID   int    `json:"player_id"`
+	PlayerName string `json:"player_name"`
+	Wins       int    `json:"wins"`
+	Seconds    int    `json:"seconds"`
+	Points     int    `json:"points"`
+}
+
 // Repository provides methods to interact with the database
 type Repository struct {
 	DB *sql.DB
@@ -202,6 +212,138 @@ func (r *Repository) GetAllPlayers() ([]Player, error) {
 	}
 
 	return players, nil
+}
+
+// GetOverallWinsLeaderboard returns players ranked by wins across all seasons.
+func (r *Repository) GetOverallWinsLeaderboard() ([]LeaderboardEntry, error) {
+	query := `
+		SELECT
+			p.id,
+			p.name,
+			COUNT(*) AS wins
+		FROM
+			games g
+		JOIN
+			players p ON p.id = g.winner_id
+		WHERE
+			g.winner_id IS NOT NULL
+		GROUP BY
+			p.id, p.name
+		ORDER BY
+			wins DESC, p.name ASC
+	`
+
+	rows, err := r.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var entries []LeaderboardEntry
+	for rows.Next() {
+		var entry LeaderboardEntry
+		if err := rows.Scan(&entry.PlayerID, &entry.PlayerName, &entry.Wins); err != nil {
+			return nil, err
+		}
+		entry.Points = entry.Wins
+		entries = append(entries, entry)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	applyWinsRanks(entries)
+	return entries, nil
+}
+
+// GetPointsLeaderboardSinceSeason returns a 3/1 points leaderboard from a season onward.
+func (r *Repository) GetPointsLeaderboardSinceSeason(startSeasonID int) ([]LeaderboardEntry, error) {
+	query := `
+		SELECT
+			p.id,
+			p.name,
+			SUM(score.points) AS points,
+			SUM(score.wins) AS wins,
+			SUM(score.seconds) AS seconds
+		FROM (
+			SELECT
+				winner_id AS player_id,
+				3 AS points,
+				1 AS wins,
+				0 AS seconds
+			FROM
+				games
+			WHERE
+				season_id >= ? AND winner_id IS NOT NULL
+
+			UNION ALL
+
+			SELECT
+				second_place_id AS player_id,
+				1 AS points,
+				0 AS wins,
+				1 AS seconds
+			FROM
+				games
+			WHERE
+				season_id >= ? AND second_place_id IS NOT NULL
+		) score
+		JOIN
+			players p ON p.id = score.player_id
+		GROUP BY
+			p.id, p.name
+		ORDER BY
+			points DESC, wins DESC, seconds DESC, p.name ASC
+	`
+
+	rows, err := r.DB.Query(query, startSeasonID, startSeasonID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var entries []LeaderboardEntry
+	for rows.Next() {
+		var entry LeaderboardEntry
+		if err := rows.Scan(&entry.PlayerID, &entry.PlayerName, &entry.Points, &entry.Wins, &entry.Seconds); err != nil {
+			return nil, err
+		}
+		entries = append(entries, entry)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	applyPointsRanks(entries)
+	return entries, nil
+}
+
+func applyWinsRanks(entries []LeaderboardEntry) {
+	rank := 0
+	lastWins := -1
+	for i := range entries {
+		if entries[i].Wins != lastWins {
+			rank = i + 1
+			lastWins = entries[i].Wins
+		}
+		entries[i].Rank = rank
+	}
+}
+
+func applyPointsRanks(entries []LeaderboardEntry) {
+	rank := 0
+	lastPoints := -1
+	lastWins := -1
+	lastSeconds := -1
+	for i := range entries {
+		if entries[i].Points != lastPoints || entries[i].Wins != lastWins || entries[i].Seconds != lastSeconds {
+			rank = i + 1
+			lastPoints = entries[i].Points
+			lastWins = entries[i].Wins
+			lastSeconds = entries[i].Seconds
+		}
+		entries[i].Rank = rank
+	}
 }
 
 // UpdateGameDate updates the date of a specific game

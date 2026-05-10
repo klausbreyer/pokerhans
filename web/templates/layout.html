@@ -12,14 +12,26 @@
 
 <body class="bg-gray-100 min-h-screen">
     <header class="bg-poker-green text-white p-4 shadow-md">
-        <div class="container mx-auto flex items-center">
-            <img src="/static/img/logo.png" alt="Pokerhans Logo" class="h-12 mr-3">
-
+        <div class="container mx-auto flex items-center justify-between gap-4">
+            <a href="/" class="flex items-center">
+                <img src="/static/img/logo.png" alt="Pokerhans Logo" class="h-12 mr-3">
+            </a>
+            <nav class="flex items-center gap-2 text-sm font-medium">
+                <a href="/leaderboard" class="rounded border border-white/30 px-3 py-2 hover:bg-white/10 {{if eq .Page "leaderboard"}}bg-white text-poker-green hover:bg-white{{end}}">
+                    Leaderboard
+                </a>
+            </nav>
         </div>
     </header>
 
     <main class="container mx-auto p-4">
-        {{template "content" .}}
+        {{if eq .Page "leaderboard"}}
+            {{template "leaderboard_content" .}}
+        {{else if eq .Page "home"}}
+            {{template "home_content" .}}
+        {{else}}
+            {{template "season_content" .}}
+        {{end}}
     </main>
 
     <footer class="bg-gray-200 text-center p-4 mt-8">
