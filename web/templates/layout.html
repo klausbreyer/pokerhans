@@ -17,8 +17,11 @@
                 <img src="/static/img/logo.png" alt="Pokerhans Logo" class="h-12 mr-3">
             </a>
             <nav class="flex items-center gap-2 text-sm font-medium">
-                <a href="/leaderboard" class="rounded border border-white/30 px-3 py-2 hover:bg-white/10 {{if eq .Page "leaderboard"}}bg-white text-poker-green hover:bg-white{{end}}">
-                    Leaderboard
+                <a href="/" class="rounded border border-white/30 px-3 py-2 hover:bg-white/10 {{if eq .Page "leaderboard"}}bg-white text-poker-green hover:bg-white{{end}}">
+                    Rangliste
+                </a>
+                <a href="/seasons" class="rounded border border-white/30 px-3 py-2 hover:bg-white/10 {{if eq .Page "home"}}bg-white text-poker-green hover:bg-white{{end}}">
+                    Saisons
                 </a>
             </nav>
         </div>

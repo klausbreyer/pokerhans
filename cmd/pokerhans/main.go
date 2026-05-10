@@ -71,8 +71,13 @@ func main() {
 
 	// Routes
 	http.HandleFunc("/leaderboard", func(w http.ResponseWriter, r *http.Request) {
+		// Legacy URL: redirect to new home.
+		http.Redirect(w, r, "/", http.StatusMovedPermanently)
+	})
+
+	http.HandleFunc("/seasons", func(w http.ResponseWriter, r *http.Request) {
 		logger.Printf("=== ROUTE CALL ===")
-		logger.Printf("PATH: /leaderboard")
+		logger.Printf("PATH: /seasons")
 		logger.Printf("METHOD: %s", r.Method)
 		logger.Printf("REMOTE: %s", r.RemoteAddr)
 
@@ -82,8 +87,8 @@ func main() {
 			return
 		}
 
-		logger.Printf("HANDLER: LeaderboardHandler")
-		h.LeaderboardHandler(w, r)
+		logger.Printf("HANDLER: HomeHandler (seasons list)")
+		h.HomeHandler(w, r)
 	})
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -104,8 +109,8 @@ func main() {
 			return
 		}
 
-		logger.Printf("HANDLER: HomeHandler")
-		h.HomeHandler(w, r)
+		logger.Printf("HANDLER: LeaderboardHandler (home)")
+		h.LeaderboardHandler(w, r)
 	})
 
 	http.HandleFunc("/game/add", func(w http.ResponseWriter, r *http.Request) {
@@ -150,9 +155,10 @@ func main() {
 	logger.Printf("=== SERVER STARTING ===")
 	logger.Printf("LISTENING ON: http://localhost:%s", port)
 	logger.Printf("ROUTES:")
-	logger.Printf("  - http://localhost:%s/           -> HomeHandler", port)
+	logger.Printf("  - http://localhost:%s/           -> LeaderboardHandler (home)", port)
+	logger.Printf("  - http://localhost:%s/seasons    -> HomeHandler (seasons list)", port)
 	logger.Printf("  - http://localhost:%s/season/:id -> SeasonHandler", port)
-	logger.Printf("  - http://localhost:%s/leaderboard -> LeaderboardHandler", port)
+	logger.Printf("  - http://localhost:%s/leaderboard -> 301 -> /", port)
 	logger.Printf("  - http://localhost:%s/game/add   -> AddGameHandler (POST)", port)
 	logger.Printf("  - http://localhost:%s/game/update-date -> UpdateGameDateHandler (POST)", port)
 	logger.Printf("  - http://localhost:%s/static/*   -> Static files", port)
