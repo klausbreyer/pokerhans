@@ -1,14 +1,14 @@
-.PHONY: run build test css css-watch tailwind-install migrate-up migrate-down migrate-create seed-demo
+.PHONY: start build test css css-watch tailwind-install migrate-up migrate-down migrate-create seed-demo
 
 # Default target
-all: css build run
+all: css build start
 
 # Build the application
 build:
 	go build -o bin/pokerhans ./cmd/pokerhans
 
 # Run the application
-run:
+start:
 	go run ./cmd/pokerhans
 
 # Run tests
@@ -128,7 +128,7 @@ init:
 dev:
 	@echo "Start two terminals:"
 	@echo "Terminal 1: make css-watch"
-	@echo "Terminal 2: make run"
+	@echo "Terminal 2: make start"
 
 # Generate demo data
 seed-demo:
