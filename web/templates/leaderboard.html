@@ -17,8 +17,8 @@
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
         {{/* ───────── Siege gesamt ───────── */}}
-        <section class="bg-white rounded shadow overflow-hidden">
-            <div class="border-b border-gray-200 p-4">
+        <section class="bg-white rounded-lg shadow-sm ring-1 ring-gray-900/5 overflow-hidden">
+            <div class="border-b border-gray-100 px-5 py-4">
                 <h3 class="text-xl font-bold text-gray-900">Siege gesamt</h3>
                 <p class="mt-1 text-sm text-gray-600">Alle Siege über alle Saisons.</p>
             </div>
@@ -26,7 +26,7 @@
             {{if .OverallWins}}
             <ol>
                 {{range .OverallWins}}
-                <li class="flex items-center gap-3 px-4 py-3 border-b last:border-b-0 hover:bg-gray-50">
+                <li class="flex items-center gap-3 px-5 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/70 transition-colors">
                     <span class="inline-flex items-center justify-center w-8 h-8 rounded text-xs font-bold tabular-nums shrink-0
                         {{if eq .Rank 1}}bg-yellow-100 text-yellow-800 ring-1 ring-yellow-300
                         {{else if eq .Rank 2}}bg-gray-100 text-gray-700 ring-1 ring-gray-300
@@ -47,8 +47,8 @@
         </section>
 
         {{/* ───────── Wertung seit Saison N ───────── */}}
-        <section class="bg-white rounded shadow overflow-hidden">
-            <div class="border-b border-gray-200 p-4">
+        <section class="bg-white rounded-lg shadow-sm ring-1 ring-gray-900/5 overflow-hidden">
+            <div class="border-b border-gray-100 px-5 py-4">
                 <h3 class="text-xl font-bold text-gray-900">Wertung seit Saison {{.LeaderboardStartSeason}}</h3>
                 <p class="mt-1 text-sm text-gray-600">Punktesystem: Sieg 3 Punkte, zweiter Platz 1 Punkt.</p>
             </div>
@@ -56,7 +56,7 @@
             {{if .PointsLeaderboard}}
             <ol>
                 {{range .PointsLeaderboard}}
-                <li class="flex items-center gap-3 px-4 py-3 border-b last:border-b-0 hover:bg-gray-50">
+                <li class="flex items-center gap-3 px-5 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/70 transition-colors">
                     <span class="inline-flex items-center justify-center w-8 h-8 rounded text-xs font-bold tabular-nums shrink-0
                         {{if eq .Rank 1}}bg-yellow-100 text-yellow-800 ring-1 ring-yellow-300
                         {{else if eq .Rank 2}}bg-gray-100 text-gray-700 ring-1 ring-gray-300
