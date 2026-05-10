@@ -1,0 +1,87 @@
+{{define "leaderboard_content"}}
+<div class="mb-6">
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <p class="text-sm font-semibold uppercase tracking-wide text-poker-green">Pokerhans</p>
+            <h2 class="text-3xl font-bold text-gray-900">Leaderboard</h2>
+            <p class="mt-2 max-w-2xl text-gray-600">Overall wins and season {{.LeaderboardStartSeason}} scoring with 3 points for a win and 1 point for second place.</p>
+        </div>
+
+        {{if .LatestSeasonID}}
+        <a href="/season/{{.LatestSeasonID}}" class="inline-flex items-center justify-center rounded bg-poker-green px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">
+            Current Season
+        </a>
+        {{end}}
+    </div>
+
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <section class="overflow-hidden rounded bg-white shadow">
+            <div class="border-b border-gray-200 p-4">
+                <h3 class="text-xl font-bold text-gray-900">Siege overall</h3>
+                <p class="mt-1 text-sm text-gray-600">All wins across every season.</p>
+            </div>
+
+            {{if .OverallWins}}
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-gray-100 text-sm text-gray-700">
+                        <tr>
+                            <th class="w-20 p-3 text-left">Rank</th>
+                            <th class="p-3 text-left">Player</th>
+                            <th class="w-24 p-3 text-right">Wins</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .OverallWins}}
+                        <tr class="border-b last:border-b-0 hover:bg-gray-50">
+                            <td class="p-3 font-bold text-poker-green">#{{.Rank}}</td>
+                            <td class="p-3 font-medium text-gray-900">{{.PlayerName}}</td>
+                            <td class="p-3 text-right font-semibold text-gray-900">{{.Wins}}</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+            {{else}}
+            <p class="p-4 text-gray-500 italic">No wins recorded yet.</p>
+            {{end}}
+        </section>
+
+        <section class="overflow-hidden rounded bg-white shadow">
+            <div class="border-b border-gray-200 p-4">
+                <h3 class="text-xl font-bold text-gray-900">Wertung seit Season {{.LeaderboardStartSeason}}</h3>
+                <p class="mt-1 text-sm text-gray-600">Formula style scoring: win 3 points, second place 1 point.</p>
+            </div>
+
+            {{if .PointsLeaderboard}}
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-gray-100 text-sm text-gray-700">
+                        <tr>
+                            <th class="w-20 p-3 text-left">Rank</th>
+                            <th class="p-3 text-left">Player</th>
+                            <th class="w-24 p-3 text-right">Points</th>
+                            <th class="w-20 p-3 text-right">Wins</th>
+                            <th class="w-24 p-3 text-right">Second</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .PointsLeaderboard}}
+                        <tr class="border-b last:border-b-0 hover:bg-gray-50">
+                            <td class="p-3 font-bold text-poker-green">#{{.Rank}}</td>
+                            <td class="p-3 font-medium text-gray-900">{{.PlayerName}}</td>
+                            <td class="p-3 text-right font-semibold text-gray-900">{{.Points}}</td>
+                            <td class="p-3 text-right text-gray-700">{{.Wins}}</td>
+                            <td class="p-3 text-right text-gray-700">{{.Seconds}}</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+            {{else}}
+            <p class="p-4 text-gray-500 italic">No scoring results recorded since season {{.LeaderboardStartSeason}}.</p>
+            {{end}}
+        </section>
+    </div>
+</div>
+{{end}}
