@@ -45,12 +45,14 @@ class DeploymentTest(unittest.TestCase):
             with self.subTest(url=url), self.assertRaises(RuntimeError):
                 deploy.database_environment(web, url)
 
-    def test_refuses_multiple_ready_pods(self):
+    def test_waits_for_rolling_update_to_settle(self):
         response = {"status": "active", "regions": [{"pods": [
             {"name": "one", "status": "ready"}, {"name": "two", "status": "ready"}]}]}
         with patch.object(deploy, "api", return_value=response):
-            with self.assertRaisesRegex(RuntimeError, "Multiple"):
-                deploy.ready_pod("/mc/apps/test")
+            self.assertIsNone(deploy.ready_pod("/mc/apps/test"))
+        response["regions"][0]["pods"] = [{"name": "new", "status": "ready"}]
+        with patch.object(deploy, "api", return_value=response):
+            self.assertEqual(deploy.ready_pod("/mc/apps/test"), "new")
 
 
 if __name__ == "__main__":

@@ -60,7 +60,7 @@ def database_environment(web, url):
 def ready_pod(base):
     overview = api("GET", base + "/overview")
     pods = [p for r in overview["regions"] for p in r["pods"]]
-    require(len([p for p in pods if p["status"] == "ready"]) <= 1, "Multiple ready pods")
+    # Rolling updates can briefly keep both old and new web pods ready.
     if overview["status"] == "active" and len(pods) == 1 and pods[0]["status"] == "ready":
         return pods[0]["name"]
 
