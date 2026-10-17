@@ -36,6 +36,7 @@ jobs:
       - run: mix format --check-formatted
       - run: mix compile --warnings-as-errors
       - run: mix ecto.create && mix ecto.migrate && mix test
+      - run: python3 -m unittest discover -s test && sh -n scripts/start.sh
   build:
     if: github.event_name != 'pull_request'
     needs: test

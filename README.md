@@ -74,3 +74,23 @@ application and its imported data have been verified. Retain the source database
 and a private export for rollback. After new writes reach Postgres, switching back
 requires reconciling those writes first. Bunny volumes do not provide automatic
 backups; retain external PostgreSQL backups before relying on this as sole storage.
+
+## Migration record
+
+On 2026-10-17, all 5 seasons, 9 players and 27 games were migrated from the
+production MySQL database to PostgreSQL. The final export was taken after
+stopping the Fly writer and matched the imported UTC snapshot exactly.
+SHA-256: `8305f98c68e134887d5ff02bf6b04273915c0c38df77461b426af7a6d2415b2b`.
+
+- Production: https://pokerhans.breyer.berlin
+- Bunny app: `066vxj3nesUoaZf`, endpoint `mc-j5ztc5ffb8.bunny.run`
+- Postgres volume instance: `12d02511-1af9-4594-a14a-338cdd9cc451`
+- Private backups: `~/Backups/pokerhans/20261017T151325Z/`
+- Cloudflare CNAME `pokerhans` points to `mc-j5ztc5ffb8.b-cdn.net`, DNS only.
+
+A replacement pod retained the same volume and all pages matched the original
+application after the restart. The temporary import environment was removed.
+The old Fly machine `17814473a47598` is stopped with autostart and restart
+disabled. The legacy Fly deployment and MySQL migration workflows are disabled.
+The original MySQL database remains intact. For rollback, its original Fly
+configuration and the final source snapshot are in the private backup directory.

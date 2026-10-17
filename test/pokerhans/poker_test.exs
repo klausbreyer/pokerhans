@@ -110,5 +110,23 @@ defmodule Pokerhans.PokerTest do
     assert game.id > 30
   end
 
+  test "a browser session can submit the rendered CSRF-protected game form" do
+    page = call(:get, "/season/4")
+    [_, token] = Regex.run(~r/name="_csrf_token" value="([^"]+)"/, page.resp_body)
+
+    response =
+      conn(:post, "/game/add", %{
+        "season_id" => "4",
+        "host_id" => "1",
+        "game_date" => "2026-10-17",
+        "_csrf_token" => token
+      })
+      |> recycle_cookies(page)
+      |> Router.call(Router.init([]))
+
+    assert response.status == 303
+    assert [%{host_id: 1, game_date: ~D[2026-10-17]}] = Poker.games(4)
+  end
+
   defp call(method, path), do: method |> conn(path) |> Router.call(Router.init([]))
 end
