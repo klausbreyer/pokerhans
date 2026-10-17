@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-# The database sidecar can take longer to start than the application container.
+# Retry transient database connection failures during release startup.
 attempt=0
 until /app/bin/pokerhans eval 'Pokerhans.Release.migrate()'; do
   attempt=$((attempt + 1))

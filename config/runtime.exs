@@ -1,7 +1,7 @@
 import Config
 
 if url = System.get_env("DATABASE_URL") do
-  config :pokerhans, Pokerhans.Repo, url: url
+  config :pokerhans, Pokerhans.Repo, url: url, ssl: config_env() == :prod
 end
 
 config :pokerhans,
