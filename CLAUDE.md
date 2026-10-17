@@ -15,5 +15,4 @@ Elixir application using Plug, Bandit, Ecto and PostgreSQL, hosted on Bunny Magi
 - Document public modules and functions.
 - Never import migration snapshots over existing data.
 - Bunny runs one web pod in DE using external PostgreSQL. Database changes require a verified data migration before deployment.
-- Until that migration is complete, retain the current Postgres sidecar and volume.
 - Keep credentials and database exports outside Git.

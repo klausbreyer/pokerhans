@@ -35,23 +35,19 @@ gh secret set DATABASE_URL --repo klausbreyer/pokerhans
 Paste the database URL at the prompt, for example
 `postgresql://USER:PASSWORD@HOST:5432/pokerhans?ssl=true`.
 Percent-encode special characters in credentials. `ssl=true` enables TLS with
-certificate and hostname verification. Use a dedicated database for Pokerhans.
+certificate and hostname verification. Production enables TLS by default.
+For `*.your-database.de`, the bundled [Hetzner CA](priv/certs/README.md) is used.
+Use a dedicated database for Pokerhans.
 
-The target deployment runs one web container in Germany, connected to external
+The deployment runs one web container in Germany, connected to external
 PostgreSQL. GitHub supplies `DATABASE_URL`; other runtime secrets, including
 `SECRET_KEY_BASE`, are preserved on Bunny. The startup script applies migrations
 before starting the release. Disable CDN caching for pages containing CSRF tokens.
 
-**Pending database cutover:** the existing PostgreSQL sidecar still serves live
-traffic. Setting the secret does not migrate data. Freeze writes, export the
-current PostgreSQL data (including writes since the MySQL migration), restore
-and verify it in the external database, then update Bunny's `DATABASE_URL` and
-remove the sidecar. Retain the old volume and a private export until verification
-is complete. Do not restore the original MySQL snapshot over newer data.
-
-Deployments refuse to run while the sidecar remains or if the GitHub database URL
-differs from the verified URL on Bunny. They never switch databases implicitly.
-After cutover:
+Database moves require a separate migration: freeze writes, export current data,
+restore and verify it, then update Bunny and the GitHub secret together.
+Deployments reject a sidecar or a database URL that differs from Bunny's verified
+target. They never switch databases implicitly.
 
 ```sh
 python3 scripts/deploy.py                    # read-only health checks
@@ -95,7 +91,6 @@ SHA-256: `8305f98c68e134887d5ff02bf6b04273915c0c38df77461b426af7a6d2415b2b`.
 
 - Production: https://pokerhans.breyer.berlin
 - Bunny app: `066vxj3nesUoaZf`, endpoint `mc-j5ztc5ffb8.bunny.run`
-- Postgres volume instance: `12d02511-1af9-4594-a14a-338cdd9cc451`
 - Private backups: `~/Backups/pokerhans/20261017T151325Z/`
 - Cloudflare CNAME `pokerhans` points to `mc-j5ztc5ffb8.b-cdn.net`, DNS only.
 
@@ -103,5 +98,24 @@ A replacement pod retained the same volume and all pages matched the original
 application after the restart. The temporary import environment was removed.
 The old Fly machine `17814473a47598` is stopped with autostart and restart
 disabled. The legacy Fly deployment and MySQL migration workflows are disabled.
-The original MySQL database remains intact. For rollback, its original Fly
-configuration and the final source snapshot are in the private backup directory.
+The original MySQL database remains intact. Its original Fly configuration and
+source snapshot are in the private backup directory. New PostgreSQL writes must
+be preserved before any rollback.
+
+### External PostgreSQL cutover
+
+Later on 2026-10-17, the current Bunny PostgreSQL data was transferred to the
+user-provided `pokerhans` database on `mkqq.your-database.de`. The app was placed
+in maintenance mode during the snapshot. Every value in all five tables,
+including migration metadata, and all three sequence states were verified.
+The source snapshot SHA-256 is
+`cfa0ebb0d0f6d9a7deddc7e82a984191d9a9c7005101eed16ae9b17db13dcc91`.
+
+The application now uses certificate- and hostname-verified TLS. All six pages
+matched the pre-cutover site, and a CSRF-protected date update succeeded without
+changing stored values. The temporary export endpoint, PostgreSQL container and
+Bunny volume were removed.
+
+The snapshot and a PostgreSQL custom-format dump are stored privately at
+`~/Backups/pokerhans/20261017T153827Z-external/`. The dump was restored to an
+isolated local database and every table was compared with the source snapshot.
