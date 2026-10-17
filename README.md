@@ -25,26 +25,37 @@ The home page shows all-time wins and 3/1 scoring from season four onward.
 
 GitHub Actions tests and publishes `ghcr.io/klausbreyer/pokerhans:<commit>`.
 Pushes to `main` deploy that immutable image to the app configured in `bunny.json`.
-The required GitHub secret is `BUNNYNET_API_KEY`:
+Required GitHub secrets are `BUNNYNET_API_KEY` and `DATABASE_URL`:
 
 ```sh
 gh secret set BUNNYNET_API_KEY --repo klausbreyer/pokerhans
+gh secret set DATABASE_URL --repo klausbreyer/pokerhans
 ```
 
-PostgreSQL runs as a sidecar on localhost with a persistent volume. Keep exactly
-one pod in Germany. Extra pods get separate databases, not replicas. Deployments
-check the volume instance ID before and after replacing the web container.
-A volume handoff causes brief downtime. Never delete/recreate or scale the app
-as a deployment procedure.
+Paste the database URL at the prompt, for example
+`postgresql://USER:PASSWORD@HOST:5432/pokerhans?ssl=true`.
+Percent-encode special characters in credentials. `ssl=true` enables TLS with
+certificate and hostname verification. Use a dedicated database for Pokerhans.
 
-Runtime secrets `DATABASE_URL`, `POSTGRES_PASSWORD` and `SECRET_KEY_BASE` live in
-Bunny and are preserved by deployments. The database is not publicly exposed.
-The startup script waits for PostgreSQL, applies migrations and starts the release.
-The CDN must disable caching for dynamic pages because forms contain CSRF tokens.
+The target deployment runs one web container in Germany, connected to external
+PostgreSQL. GitHub supplies `DATABASE_URL`; other runtime secrets, including
+`SECRET_KEY_BASE`, are preserved on Bunny. The startup script applies migrations
+before starting the release. Disable CDN caching for pages containing CSRF tokens.
+
+**Pending database cutover:** the existing PostgreSQL sidecar still serves live
+traffic. Setting the secret does not migrate data. Freeze writes, export the
+current PostgreSQL data (including writes since the MySQL migration), restore
+and verify it in the external database, then update Bunny's `DATABASE_URL` and
+remove the sidecar. Retain the old volume and a private export until verification
+is complete. Do not restore the original MySQL snapshot over newer data.
+
+Deployments refuse to run while the sidecar remains or if the GitHub database URL
+differs from the verified URL on Bunny. They never switch databases implicitly.
+After cutover:
 
 ```sh
-python3 scripts/deploy.py                    # read-only health/storage checks
-python3 scripts/deploy.py --tag <commit>     # deploy a published image
+python3 scripts/deploy.py                    # read-only health checks
+python3 scripts/deploy.py --tag <commit>     # requires DATABASE_URL in the environment
 ```
 
 ## MySQL migration

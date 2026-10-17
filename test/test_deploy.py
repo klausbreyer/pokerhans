@@ -1,4 +1,4 @@
-"""Guard against deployments that would replace or split the production database."""
+"""Guard against deployments before a verified external database migration."""
 import copy
 import importlib.util
 from pathlib import Path
@@ -15,28 +15,35 @@ class DeploymentTest(unittest.TestCase):
         self.app = {
             "autoScaling": {"min": 1, "max": 1},
             "regionSettings": {"allowedRegionIds": ["DE"], "requiredRegionIds": ["DE"]},
-            "volumes": [{"name": "postgres-data", "size": 1}],
             "containerTemplates": [
-                {"name": "postgres", "volumeMounts": [
-                    {"name": "postgres-data", "mountPath": "/var/lib/postgresql/data"}]},
                 {"name": "web", "imageNamespace": "klausbreyer", "imageName": "pokerhans"},
             ],
         }
 
-    def test_refuses_scaling_and_changed_storage(self):
+    def test_refuses_scaling_and_unmigrated_sidecar(self):
         self.assertEqual(deploy.validate(self.app, {})["name"], "web")
-        for key, value in [("autoScaling", {"min": 1, "max": 2}), ("volumes", [])]:
-            changed = copy.deepcopy(self.app)
-            changed[key] = value
-            with self.assertRaises(RuntimeError):
-                deploy.validate(changed, {})
+        changed = copy.deepcopy(self.app)
+        changed["autoScaling"] = {"min": 1, "max": 2}
+        with self.assertRaises(RuntimeError):
+            deploy.validate(changed, {})
+        self.app["containerTemplates"].append({"name": "postgres"})
+        with self.assertRaisesRegex(RuntimeError, "migration must finish"):
+            deploy.validate(self.app, {})
 
-    def test_refuses_a_replacement_volume(self):
-        response = {"items": [{"name": "postgres-data", "volumeInstances": [{
-            "id": "new-empty-volume", "status": "attached", "attachedPods": ["pod"]}]}]}
-        with patch.object(deploy, "api", return_value=response):
-            with self.assertRaisesRegex(RuntimeError, "replaced"):
-                deploy.volume_identity("/mc/apps/test", {"volume_instance_id": "original"})
+    def test_database_secret_preserves_other_environment(self):
+        url = "postgresql://user:password@db.example.com/pokerhans?ssl=true"
+        environment = [{"name": "SECRET_KEY_BASE", "value": "keep"},
+                       {"name": "DATABASE_URL", "value": url}]
+        self.assertEqual(deploy.database_environment({"environmentVariables": environment}, url),
+                         environment)
+
+    def test_refuses_missing_local_or_changed_database(self):
+        web = {"environmentVariables": [{"name": "DATABASE_URL",
+                                        "value": "postgresql://db.example.com/original"}]}
+        for url in (None, "", "postgresql://localhost/pokerhans", "https://db.example.com/db",
+                    "postgresql://db.example.com/another", "postgresql://[invalid/db"):
+            with self.subTest(url=url), self.assertRaises(RuntimeError):
+                deploy.database_environment(web, url)
 
     def test_refuses_multiple_ready_pods(self):
         response = {"status": "active", "regions": [{"pods": [

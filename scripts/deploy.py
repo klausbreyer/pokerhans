@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Deploy an immutable image while preserving the single PostgreSQL volume."""
+"""Deploy an immutable image using the migrated external PostgreSQL database."""
 import argparse
 import json
+import os
 from pathlib import Path
 import subprocess
 import time
 import urllib.request
+from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -29,26 +31,30 @@ def validate(app, config):
     for key in ("allowedRegionIds", "requiredRegionIds"):
         require(app["regionSettings"][key] == ["DE"], "Expected DE only")
     containers = {c["name"]: c for c in app["containerTemplates"]}
-    require(set(containers) == {"web", "postgres"}, "Unexpected containers")
-    require(containers["postgres"]["volumeMounts"] ==
-            [{"name": "postgres-data", "mountPath": "/var/lib/postgresql/data"}],
-            "Postgres volume mount changed")
-    require(app["volumes"] == [{"name": "postgres-data", "size": 1}], "Volume configuration changed")
+    require(set(containers) == {"web"},
+            "External database migration must finish before deployment: remove the Postgres sidecar after verification")
+    require(not containers["web"].get("volumeMounts"), "Web container must not mount database storage")
     require((containers["web"]["imageNamespace"], containers["web"]["imageName"]) ==
             ("klausbreyer", "pokerhans"), "Unexpected web image")
     return containers["web"]
 
 
-def volume_identity(base, config):
-    volumes = api("GET", base + "/volumes")["items"]
-    require(len(volumes) == 1 and volumes[0]["name"] == "postgres-data", "Unexpected volume")
-    instances = volumes[0]["volumeInstances"]
-    require(len(instances) == 1, "Expected one volume instance")
-    instance = instances[0]
-    require(instance["id"] == config["volume_instance_id"], "Persistent volume was replaced")
-    require(instance["status"] == "attached" and len(instance["attachedPods"]) == 1,
-            "Volume must be attached to exactly one pod")
-    return instance["id"]
+def database_environment(web, url):
+    require(bool(url and url.strip()), "DATABASE_URL is required for deployment")
+    try:
+        parsed = urlsplit(url)
+        valid = (parsed.scheme in ("postgres", "postgresql") and parsed.hostname
+                 and parsed.hostname not in ("localhost", "127.0.0.1", "::1")
+                 and parsed.path not in ("", "/"))
+    except ValueError:
+        valid = False
+    require(valid, "DATABASE_URL must identify an external PostgreSQL database")
+    environment = web.get("environmentVariables", [])
+    current = next((e["value"] for e in environment if e["name"] == "DATABASE_URL"), None)
+    require(current == url,
+            "DATABASE_URL differs from Bunny: migrate and verify the database before changing the deployment target")
+    return [e for e in environment if e["name"] != "DATABASE_URL"] + [
+        {"name": "DATABASE_URL", "value": url}]
 
 
 def ready_pod(base):
@@ -81,14 +87,15 @@ def deploy(config, tag=None):
     web = validate(api("GET", base), config)
     old_pod = ready_pod(base)
     require(old_pod, "App must be healthy before deployment")
-    volume_identity(base, config)
     if tag:
+        environment = database_environment(web, os.environ.get("DATABASE_URL"))
         image = api("POST", "/mc/registries/digest", {
             "registryId": web["imageRegistryId"], "imageNamespace": "klausbreyer",
             "imageName": "pokerhans", "tag": tag})
         if web["imageDigest"] != image["digest"]:
             api("PATCH", base + "/containers/" + web["id"], {
-                "imageTag": tag, "imageDigest": image["digest"], "imagePullPolicy": "always"})
+                "imageTag": tag, "imageDigest": image["digest"], "imagePullPolicy": "always",
+                "environmentVariables": environment})
             print("Deploying " + tag, flush=True)
             deadline = time.monotonic() + 900
             while time.monotonic() < deadline:
@@ -96,13 +103,13 @@ def deploy(config, tag=None):
                 if pod and pod != old_pod:
                     current = validate(api("GET", base), config)
                     require(current["imageDigest"] == image["digest"], "Unexpected deployed image")
-                    volume_identity(base, config)
+                    database_environment(current, os.environ.get("DATABASE_URL"))
                     break
                 time.sleep(5)
             else:
                 raise RuntimeError("Deployment timed out. Inspect Bunny before retrying")
     check_http(config)
-    print("Verified one healthy pod and the original Postgres volume", flush=True)
+    print("Verified one healthy web pod using external PostgreSQL", flush=True)
 
 
 if __name__ == "__main__":
