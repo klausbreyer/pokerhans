@@ -1,22 +1,18 @@
-# AGENTS.md
+# Pokerhans
 
-This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
+Elixir application using Plug, Bandit, Ecto and PostgreSQL, hosted on Bunny Magic Containers.
 
-## Build & Run Commands
-- Build: `go build -o app ./cmd/pokerhans`
-- Run server: `go run ./cmd/pokerhans`
-- Lint: `golangci-lint run`
-- Test: `go test ./...`
-- Single test: `go test ./path/to/package -run TestName`
+## Commands
+- Setup: `make setup`
+- Run: `make start`
+- Tests: `make test`
+- Formatting: `mix format --check-formatted`
+- Production release: `make build`
 
-## Code Style Guidelines
-- **Formatting**: Use `gofmt` for all Go code
-- **Imports**: Group standard library imports first, then third-party, then internal
-- **Error Handling**: Always check and handle errors; use descriptive error messages
-- **Types**: Use strong typing; avoid interface{} when possible
-- **Naming**: 
-  - Use camelCase for variables, PascalCase for exported functions/types
-  - Use short but descriptive names
-- **Database**: Always use parameterized queries to prevent SQL injection
-- **Frontend**: Follow Tailwind CSS conventions for all styling
-- **Documentation**: Document all exported functions and types with comments
+## Conventions
+- Keep the existing routes and Tailwind interface stable.
+- Use Ecto changesets for form input and parameterized database queries.
+- Document public modules and functions.
+- Never import migration snapshots over existing data.
+- Bunny runs one pod in DE with a persistent Postgres volume. Never scale it up or replace its volume during deployment.
+- Keep credentials and database exports outside Git.

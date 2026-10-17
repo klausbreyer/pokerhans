@@ -1,30 +1,23 @@
-ARG GO_VERSION=1
-FROM golang:${GO_VERSION}-bookworm as builder
-
-WORKDIR /usr/src/app
-COPY go.mod go.sum ./
-RUN go mod download && go mod verify
-COPY . .
-RUN go build -v -o /run-app ./cmd/pokerhans
-
-
-FROM debian:bookworm
-
-# Installiere notwendige Pakete
-RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
-
-# Kopiere Binary
-COPY --from=builder /run-app /usr/local/bin/
-
-# Kopiere Templates und statische Dateien
-# Hinweis: Die CSS-Dateien werden bereits im GitHub Actions Workflow gebaut
-COPY --from=builder /usr/src/app/web /app/web
-COPY --from=builder /usr/src/app/migrations /app/migrations
-
-# Arbeitsverzeichnis und ENV
+FROM elixir:1.19.5-otp-28-slim AS build
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential git ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-ENV PORT=8080
-EXPOSE 8080
+ENV MIX_ENV=prod
+RUN mix local.hex --force && mix local.rebar --force
+COPY mix.exs mix.lock ./
+COPY config config
+RUN mix deps.get --only prod && mix deps.compile
+COPY lib lib
+COPY priv priv
+COPY web/static/css web/static/css
+RUN mix compile --warnings-as-errors && mix tailwind.install && mix tailwind default && mix release
 
-# Starte die Anwendung
-CMD ["run-app"]
+# Keep Erlang's native library ABI compatible with the builder.
+FROM elixir:1.19.5-otp-28-slim AS runtime
+WORKDIR /app
+ENV MIX_ENV=prod PORT=4000 ERL_FLAGS="+S 2:2"
+COPY --from=build --chown=nobody:nogroup /app/_build/prod/rel/pokerhans ./
+COPY --chmod=755 scripts/start.sh /app/start.sh
+USER nobody
+EXPOSE 4000
+CMD ["/app/start.sh"]
