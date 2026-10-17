@@ -1,7 +1,14 @@
 import Config
 
 if url = System.get_env("DATABASE_URL") do
-  config :pokerhans, Pokerhans.Repo, url: url, ssl: config_env() == :prod
+  ssl =
+    if String.ends_with?(URI.parse(url).host || "", ".your-database.de") do
+      [cacertfile: Path.join(:code.priv_dir(:pokerhans), "certs/hetzner-postgresql-ca.pem")]
+    else
+      config_env() == :prod
+    end
+
+  config :pokerhans, Pokerhans.Repo, url: url, ssl: ssl
 end
 
 config :pokerhans,
