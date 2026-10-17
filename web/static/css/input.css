@@ -1,4 +1,5 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
+@source "../../../lib/pokerhans/templates";
 
 @theme {
   --color-primary: var(--color-green-700);

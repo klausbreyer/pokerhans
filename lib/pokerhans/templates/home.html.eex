@@ -1,0 +1,20 @@
+<div class="text-center py-12">
+    <h2 class="text-2xl font-bold mb-4">Saisons</h2>
+
+    <%= if present?(@data.seasons) do %>
+        <div class="mb-8">
+            <h3 class="text-xl mb-4">Saison auswählen</h3>
+            <div class="flex justify-center space-x-4">
+                <%= for item1 <- @data.seasons do %>
+                    <a href="/season/<%= item1.id %>" class="bg-poker-green text-white py-2 px-4 rounded hover:bg-green-700 transition">
+                        <%= item1.name %>
+                    </a>
+                <% end %>
+            </div>
+        </div>
+    <% else %>
+        <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-8">
+            <p>Keine Saisons verfügbar. Bitte füge eine Saison über die Datenbank hinzu.</p>
+        </div>
+    <% end %>
+</div>

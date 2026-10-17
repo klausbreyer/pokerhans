@@ -1,4 +1,0 @@
-DROP TABLE IF EXISTS games;
-DROP TABLE IF EXISTS season_players;
-DROP TABLE IF EXISTS players;
-DROP TABLE IF EXISTS seasons;

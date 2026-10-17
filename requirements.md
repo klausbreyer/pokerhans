@@ -48,21 +48,21 @@ A simple web tool for tracking poker games within a local group, organized by se
 
 #### Backend
 
-- Language: **Go**
+- Language: **Elixir**
 
-- Database: **MySQL** (or compatible)
+- Database: **PostgreSQL**
 
-- Hosted on **Fly.io**
+- Hosted on **Bunny Magic Containers**
 
 #### Deployment
 
 - Automated using a **GitHub Actions pipeline**
 
-- Pipeline builds and deploys to Fly.io on push to `main`
+- Pipeline builds and deploys to Bunny on push to `main`
 
 #### Frontend
 
-- Server-rendered HTML (e.g., `html/template` in Go)
+- Server-rendered HTML (e.g., EEx with HTML escaping)
 
 - **Tailwind CSS** for styling
 
