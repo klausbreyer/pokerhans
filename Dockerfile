@@ -15,7 +15,7 @@ RUN mix compile --warnings-as-errors && mix tailwind.install && mix tailwind def
 # Keep Erlang's native library ABI compatible with the builder.
 FROM elixir:1.19.5-otp-28-slim AS runtime
 WORKDIR /app
-ENV MIX_ENV=prod PORT=4000 ERL_FLAGS="+S 2:2"
+ENV MIX_ENV=prod PORT=4000 ERL_FLAGS="+S 2:2" RELEASE_MODE=interactive
 COPY --from=build --chown=nobody:nogroup /app/_build/prod/rel/pokerhans ./
 COPY --chmod=755 scripts/start.sh /app/start.sh
 USER nobody
