@@ -44,6 +44,18 @@ PostgreSQL. GitHub supplies `DATABASE_URL`; other runtime secrets, including
 `SECRET_KEY_BASE`, are preserved on Bunny. The startup script applies migrations
 before starting the release. Disable CDN caching for pages containing CSRF tokens.
 
+The container defaults to `RELEASE_MODE=interactive`, which loads compiled modules
+on first use instead of preloading every module at boot. This reduces startup
+memory use; the first call to a module pays its loading cost. Applications still
+start normally, and the migration and bootstrap `eval` commands are unaffected.
+Set `RELEASE_MODE=embedded` in the container environment to restore preloading.
+See the [Mix release documentation](https://hexdocs.pm/mix/1.19.5/Mix.Tasks.Release.html#module-environment-variables).
+
+Compare memory after visiting the home page, seasons and individual season pages,
+once the rolling update has settled to one ready pod. Read
+`regions[].pods[].ramUsageBytes` from `bunny api GET /mc/apps/066vxj3nesUoaZf/overview`.
+An immediate post-restart reading does not reflect warmed memory use.
+
 Database moves require a separate migration: freeze writes, export current data,
 restore and verify it, then update Bunny and the GitHub secret together.
 Deployments reject a sidecar or a database URL that differs from Bunny's verified
