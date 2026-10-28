@@ -1,28 +1,9 @@
-# flyctl launch added from .gitignore
-# Environment variables
-**/.env
-
-# Claude settings
-**/**/.claude/settings.local.json
-
-# Binaries
-**/bin
-**/*.exe
-**/*.dll
-**/*.so
-**/*.dylib
-
-# IDE files
-**/.idea
-**/.vscode
-
-# Go files
-**/*.test
-**/*.out
-
-# macOS files
+.git
+.env*
+_build
+deps
+tmp
+bin
+test
 **/.DS_Store
-
-# Build artifacts
-**/dist
-fly.toml
+priv/static/css/output.css

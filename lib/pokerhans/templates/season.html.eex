@@ -1,0 +1,174 @@
+<div class="mb-6">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold"><%= @data.current_season.name %></h2>
+
+        <div class="relative">
+            <select id="season-select" onchange="if (this.value) window.location.href=this.value" class="bg-white border border-gray-300 p-2 rounded">
+                <option value="">Select Season</option>
+                <%= for item1 <- @data.seasons do %>
+                <option value="/season/<%= item1.id %>" <%= if present?(item1.id == @data.current_season.id) do %>selected<% end %>><%= item1.name %></option>
+                <% end %>
+            </select>
+        </div>
+    </div>
+
+    <!-- Games History -->
+    <div class="bg-white p-5 rounded-lg shadow-sm ring-1 ring-gray-900/5 mb-6">
+        <h3 class="text-xl font-bold mb-4 border-b pb-2">Game History</h3>
+
+        <%= if present?(@data.games) do %>
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="p-2 text-left">Date</th>
+                        <th class="p-2 text-left">Host</th>
+                        <th class="p-2 text-left">Winner</th>
+                        <th class="p-2 text-left">Second Place</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <%= for item2 <- @data.games do %>
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-2">
+                            <%= Calendar.strftime(item2.game_date, "%b %d, %Y") %>
+                            <%= if present?(@data.is_latest_season) do %>
+                            <button onclick="openModal('editGameModal-<%= item2.id %>')" class="ml-2 text-blue-500 hover:text-blue-700 text-xs underline" style="font-size: 10px;">
+                                edit
+                            </button>
+                            <% end %>
+
+                            <%= if present?(@data.is_latest_season) do %>
+                            <!-- Modal for editing game date -->
+                            <div id="editGameModal-<%= item2.id %>" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+                                <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+                                    <h4 class="text-xl font-bold mb-4">Edit Game Date</h4>
+
+                                    <form action="/game/update-date" method="POST">
+<input type="hidden" name="_csrf_token" value="<%= Plug.CSRFProtection.get_csrf_token() %>">
+                                        <input type="hidden" name="game_id" value="<%= item2.id %>">
+                                        <input type="hidden" name="season_id" value="<%= @data.current_season.id %>">
+
+                                        <div class="mb-6">
+                                            <label class="block text-gray-700 mb-1">New Date</label>
+                                            <input type="date" name="new_date" value="<%= Calendar.strftime(item2.game_date, "%Y-%m-%d") %>" required class="w-full p-2 border rounded">
+                                        </div>
+
+                                        <div class="flex justify-end space-x-3 mt-4">
+                                            <button type="button" onclick="closeModal('editGameModal-<%= item2.id %>')" class="py-2 px-4 border border-gray-300 rounded hover:bg-gray-100">
+                                                Cancel
+                                            </button>
+                                            <button type="submit" class="py-2 px-4 bg-green-600 text-white rounded hover:bg-green-700 font-medium" style="background-color: #16a34a !important; color: white !important;">
+                                                Save
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            <% end %>
+                        </td>
+                        <td class="p-2"><%= item2.host_name %></td>
+                        <td class="p-2 font-medium text-poker-green"><%= item2.winner_name %></td>
+                        <td class="p-2 text-gray-600"><%= item2.second_place_name %></td>
+                    </tr>
+                    <% end %>
+                </tbody>
+            </table>
+        </div>
+        <% else %>
+        <p class="text-gray-500 italic">No games recorded yet this season.</p>
+        <% end %>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Players to visit section - Only shown for the latest season -->
+        <div class="bg-white p-5 rounded-lg shadow-sm ring-1 ring-gray-900/5">
+            <%= if present?(@data.is_latest_season) do %>
+            <h3 class="text-xl font-bold mb-4 text-poker-green border-b pb-2">Players to Visit (<%= length(@data.to_visit_players) %>)</h3>
+
+            <%= if present?(@data.to_visit_players) do %>
+            <ul class="space-y-2 mb-4">
+                <%= for item3 <- @data.to_visit_players do %>
+                <li class="flex justify-between items-center p-2 hover:bg-gray-100 rounded">
+                    <span><%= item3.name %></span>
+                    <button onclick="openModal('addGameModal-<%= item3.id %>')" class="bg-poker-green text-white py-1 px-3 rounded text-sm hover:bg-green-700">
+                        Add Game
+                    </button>
+
+                    <!-- Modal for adding game -->
+                    <div id="addGameModal-<%= item3.id %>" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+                        <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+                            <h4 class="text-xl font-bold mb-4">Add Game at <%= item3.name %>'s</h4>
+
+                            <form action="/game/add" method="POST">
+<input type="hidden" name="_csrf_token" value="<%= Plug.CSRFProtection.get_csrf_token() %>">
+                                <input type="hidden" name="season_id" value="<%= @data.current_season.id %>">
+                                <input type="hidden" name="host_id" value="<%= item3.id %>">
+
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 mb-1">Date</label>
+                                    <input type="date" name="game_date" value="<%= @data.current_date %>" required class="w-full p-2 border rounded">
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 mb-1">Winner</label>
+                                    <select name="winner_id" class="w-full p-2 border rounded">
+                                        <option value="">Select Winner</option>
+                                        <%= for item4 <- @data.all_players do %>
+                                        <option value="<%= item4.id %>"><%= item4.name %></option>
+                                        <% end %>
+                                    </select>
+                                </div>
+
+                                <div class="mb-6">
+                                    <label class="block text-gray-700 mb-1">Second Place</label>
+                                    <select name="second_place_id" class="w-full p-2 border rounded">
+                                        <option value="">Select Second Place</option>
+                                        <%= for item5 <- @data.all_players do %>
+                                        <option value="<%= item5.id %>"><%= item5.name %></option>
+                                        <% end %>
+                                    </select>
+                                </div>
+
+                                <div class="flex justify-end space-x-3">
+                                    <button type="button" onclick="closeModal('addGameModal-<%= item3.id %>')" class="py-2 px-4 border rounded">
+                                        Cancel
+                                    </button>
+                                    <button type="submit" class="bg-poker-green text-white py-2 px-4 rounded hover:bg-green-700">
+                                        Save Game
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </li>
+                <% end %>
+            </ul>
+            <% else %>
+            <p class="text-gray-500 italic">All players have been visited this season!</p>
+            <% end %>
+            <% else %>
+            <h3 class="text-xl font-bold mb-4 text-gray-500 border-b pb-2">Players to Visit</h3>
+            <p class="text-gray-500 italic">Only available for the latest season!</p>
+            <% end %>
+        </div>
+
+        <!-- Visited players section -->
+        <div class="bg-white p-5 rounded-lg shadow-sm ring-1 ring-gray-900/5">
+            <h3 class="text-xl font-bold mb-4 text-poker-red border-b pb-2">Visited Players (<%= length(@data.visited_players) %>)</h3>
+
+            <%= if present?(@data.visited_players) do %>
+            <ul class="space-y-2">
+                <%= for item6 <- @data.visited_players do %>
+                <li class="flex justify-between items-center p-2 hover:bg-gray-100 rounded">
+                    <span><%= item6.name %></span>
+                    <span class="text-sm text-gray-600"><%= Calendar.strftime(item6.game_date, "%b %d, %Y") %></span>
+                </li>
+                <% end %>
+            </ul>
+            <% else %>
+            <p class="text-gray-500 italic">No players have been visited yet this season.</p>
+            <% end %>
+        </div>
+    </div>
+</div>

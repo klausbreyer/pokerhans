@@ -29,3 +29,10 @@ web/static/css/output.css
 dist/
 .env.prod
 app
+/_build/
+/deps/
+/priv/static/css/output.css
+/tmp/
+.env.*
+!.env.example
+__pycache__/
